@@ -182,8 +182,6 @@ async function handleBuscarMedicamentos(request) {
 
 // ---------- Información detallada de un medicamento (ficha técnica CIMA) ----------
 
-// Elimina bloques enteros de <script> y <style> (con su contenido) antes de quitar el resto de etiquetas,
-// para que no se cuele código JavaScript en el texto mostrado al usuario.
 function stripHtml(html) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -197,6 +195,24 @@ function stripHtml(html) {
     .replace(/&amp;/g, "&")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+// El endpoint de CIMA devuelve una LISTA de secciones (a veces con subsecciones anidadas dentro de
+// cada una en la propiedad "secciones"), no un único campo de texto. Esta función recorre esa
+// estructura recursivamente y junta todo el texto real que encuentra.
+function extraerTextoDeSecciones(nodo, acumulado) {
+  if (Array.isArray(nodo)) {
+    nodo.forEach((item) => extraerTextoDeSecciones(item, acumulado));
+    return;
+  }
+  if (nodo && typeof nodo === "object") {
+    if (typeof nodo.contenido === "string" && nodo.contenido.trim()) {
+      acumulado.push(stripHtml(nodo.contenido));
+    }
+    if (nodo.secciones) {
+      extraerTextoDeSecciones(nodo.secciones, acumulado);
+    }
+  }
 }
 
 const SECCIONES_FICHA_TECNICA = [
@@ -233,14 +249,16 @@ async function handleInfoMedicamento(request) {
     const secciones = [];
     for (const s of SECCIONES_FICHA_TECNICA) {
       try {
-        // La sección se pasa como parámetro "seccion", no como parte de la ruta
         const seccionRes = await fetch(
           `https://cima.aemps.es/cima/rest/docSegmentado/contenido/1?nregistro=${encodeURIComponent(nregistro)}&seccion=${encodeURIComponent(s.id)}`
         );
         if (!seccionRes.ok) continue;
         const seccionData = await seccionRes.json();
-        const contenidoHtml = seccionData.contenido || "";
-        const texto = stripHtml(contenidoHtml);
+
+        const partes = [];
+        extraerTextoDeSecciones(seccionData, partes);
+        const texto = partes.join(" ").replace(/\s+/g, " ").trim();
+
         if (texto && texto.length > 5) {
           secciones.push({ titulo: s.titulo, texto });
         }
