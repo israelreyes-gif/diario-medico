@@ -1,4 +1,5 @@
 const API_URL = 'https://diario-medico-worker.israel-reyes.workers.dev';
+const SWIPE_OPEN_X = -80;
 
 let meds = [];
 let editingId = null;
@@ -40,35 +41,84 @@ function doseChip(cls, label, val) {
 
 function render() {
   const list = document.getElementById('list');
+  const hint = document.getElementById('swipeHint');
   list.innerHTML = '';
   document.getElementById('count').textContent = meds.length + (meds.length === 1 ? ' medicamento' : ' medicamentos');
 
   if (meds.length === 0) {
+    hint.classList.add('hide');
     list.innerHTML = '<p style="color:var(--ink-soft); font-size:13.5px; text-align:center; padding:30px 0;">Todavía no has añadido ningún medicamento.</p>';
     return;
   }
+  hint.classList.remove('hide');
 
   meds.forEach(m => {
-    const card = document.createElement('div');
-    card.className = 'med-card';
-    card.innerHTML = `
-      <div class="med-top">
-        <div>
-          <div class="med-name">${m.nombre}</div>
-          ${m.nota ? `<div class="med-meta">${m.nota}</div>` : ''}
+    const wrap = document.createElement('div');
+    wrap.className = 'med-card-wrap';
+    wrap.innerHTML = `
+      <button class="med-card-delete" onclick="deleteMed(${m.id})" aria-label="Eliminar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        </svg>
+      </button>
+      <div class="med-card" data-id="${m.id}">
+        <div class="med-top">
+          <div>
+            <div class="med-name">${m.nombre}</div>
+            ${m.nota ? `<div class="med-meta">${m.nota}</div>` : ''}
+          </div>
+          <button class="edit-dot" onclick="editMed(${m.id})">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </button>
         </div>
-        <button class="edit-dot" onclick="editMed(${m.id})">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-        </button>
-      </div>
-      <div class="dose-row">
-        ${doseChip('dawn-c', 'Desayuno', m.desayuno)}
-        ${doseChip('noon-c', 'Comida', m.comida)}
-        ${doseChip('dusk-c', 'Cena', m.cena)}
+        <div class="dose-row">
+          ${doseChip('dawn-c', 'Desayuno', m.desayuno)}
+          ${doseChip('noon-c', 'Comida', m.comida)}
+          ${doseChip('dusk-c', 'Cena', m.cena)}
+        </div>
       </div>
     `;
-    list.appendChild(card);
+    list.appendChild(wrap);
+    attachSwipe(wrap.querySelector('.med-card'));
   });
+}
+
+function attachSwipe(cardEl) {
+  let startX = 0, currentX = 0, dragging = false, isOpen = false;
+
+  cardEl.addEventListener('pointerdown', (e) => {
+    startX = e.clientX;
+    dragging = true;
+    cardEl.style.transition = 'none';
+  });
+
+  cardEl.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const delta = e.clientX - startX;
+    const base = isOpen ? SWIPE_OPEN_X : 0;
+    let x = base + delta;
+    if (x > 0) x = 0;
+    if (x < SWIPE_OPEN_X) x = SWIPE_OPEN_X;
+    currentX = x;
+    cardEl.style.transform = `translateX(${x}px)`;
+  });
+
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    cardEl.style.transition = 'transform 0.2s ease';
+    if (currentX < SWIPE_OPEN_X / 2) {
+      cardEl.style.transform = `translateX(${SWIPE_OPEN_X}px)`;
+      isOpen = true;
+    } else {
+      cardEl.style.transform = 'translateX(0)';
+      isOpen = false;
+    }
+  }
+
+  cardEl.addEventListener('pointerup', endDrag);
+  cardEl.addEventListener('pointercancel', endDrag);
 }
 
 async function loadMedicamentos() {
@@ -90,7 +140,6 @@ function openForm() {
   document.getElementById('medName').value = '';
   document.getElementById('medNote').value = '';
   document.getElementById('formError').classList.remove('show');
-  document.getElementById('deleteBtn').classList.remove('show');
   ['morning', 'noon', 'night'].forEach(k => setStepperDisplay(k, 0));
   document.getElementById('formOverlay').classList.add('show');
 }
@@ -103,14 +152,15 @@ function editMed(id) {
   document.getElementById('medName').value = m.nombre;
   document.getElementById('medNote').value = m.nota || '';
   document.getElementById('formError').classList.remove('show');
-  document.getElementById('deleteBtn').classList.add('show');
   ['morning', 'noon', 'night'].forEach(k => setStepperDisplay(k, currentDose[k]));
   document.getElementById('formOverlay').classList.add('show');
 }
 
 async function guardarLista(nuevaLista, botonQueMuestraCarga, textoCarga, textoNormal) {
-  botonQueMuestraCarga.disabled = true;
-  botonQueMuestraCarga.textContent = textoCarga;
+  if (botonQueMuestraCarga) {
+    botonQueMuestraCarga.disabled = true;
+    botonQueMuestraCarga.textContent = textoCarga;
+  }
   try {
     const res = await fetch(`${API_URL}/medicamentos`, {
       method: 'POST',
@@ -126,8 +176,10 @@ async function guardarLista(nuevaLista, botonQueMuestraCarga, textoCarga, textoN
     alert('No se pudo guardar: ' + err.message);
     return false;
   } finally {
-    botonQueMuestraCarga.disabled = false;
-    botonQueMuestraCarga.textContent = textoNormal;
+    if (botonQueMuestraCarga) {
+      botonQueMuestraCarga.disabled = false;
+      botonQueMuestraCarga.textContent = textoNormal;
+    }
   }
 }
 
@@ -162,18 +214,18 @@ async function saveMed() {
   if (ok) document.getElementById('formOverlay').classList.remove('show');
 }
 
-async function deleteMed() {
-  if (!editingId) return;
-  const med = meds.find(m => m.id === editingId);
+async function deleteMed(id) {
+  const med = meds.find(m => m.id === id);
   if (!med) return;
 
   const confirmado = confirm(`¿Seguro que quieres eliminar "${med.nombre}"? Se guardará en el histórico tal como estaba antes de borrarlo.`);
-  if (!confirmado) return;
+  if (!confirmado) {
+    render(); // vuelve a pintar para que la tarjeta se cierre de nuevo
+    return;
+  }
 
-  const nuevaLista = meds.filter(m => m.id !== editingId);
-  const deleteBtn = document.getElementById('deleteBtn');
-  const ok = await guardarLista(nuevaLista, deleteBtn, 'Eliminando...', 'Eliminar medicamento');
-  if (ok) document.getElementById('formOverlay').classList.remove('show');
+  const nuevaLista = meds.filter(m => m.id !== id);
+  await guardarLista(nuevaLista, null, '', '');
 }
 
 async function toggleHistory(show) {
