@@ -149,11 +149,13 @@ header{
 .overlay{
   position:fixed; inset:0; background:rgba(30,28,24,0.4);
   display:none; align-items:flex-end; justify-content:center; z-index:10;
+  overflow:hidden;
 }
 .overlay.show{ display:flex; }
 .sheet{
   width:100%; max-width:430px; background:var(--paper);
-  border-radius:26px 26px 0 0; padding:10px 22px calc(26px + env(safe-area-inset-bottom)); max-height:88vh; overflow-y:auto;
+  border-radius:26px 26px 0 0; padding:10px 22px calc(26px + env(safe-area-inset-bottom)); max-height:88vh;
+  overflow-y:auto; overflow-x:hidden;
 }
 .sheet-handle{ width:36px; height:4px; border-radius:3px; background:var(--line); margin:8px auto 16px; }
 .sheet h3{ font-family:'Fraunces', serif; font-size:20px; margin:0 0 16px; }
@@ -227,6 +229,9 @@ header{
   font-family:'Fraunces', serif; font-size:14.5px; font-weight:600; margin:0 0 6px;
   color:var(--teal-deep);
 }
-.info-section p{ font-size:13.5px; line-height:1.55; color:var(--ink); margin:0; }
+.info-section p{
+  font-size:13.5px; line-height:1.55; color:var(--ink); margin:0;
+  word-break:break-word; overflow-wrap:break-word;
+}
 .info-empty{ font-size:13px; color:var(--ink-soft); text-align:center; padding:20px 0; }
 .info-error{ font-size:13px; color:var(--danger); text-align:center; padding:20px 0; }
