@@ -233,9 +233,9 @@ async function handleInfoMedicamento(request) {
     const secciones = [];
     for (const s of SECCIONES_FICHA_TECNICA) {
       try {
-        // Este endpoint devuelve JSON con solo el contenido de la sección (sin la página completa ni scripts)
+        // La sección se pasa como parámetro "seccion", no como parte de la ruta
         const seccionRes = await fetch(
-          `https://cima.aemps.es/cima/rest/docSegmentado/contenido/1/${s.id}?nregistro=${encodeURIComponent(nregistro)}`
+          `https://cima.aemps.es/cima/rest/docSegmentado/contenido/1?nregistro=${encodeURIComponent(nregistro)}&seccion=${encodeURIComponent(s.id)}`
         );
         if (!seccionRes.ok) continue;
         const seccionData = await seccionRes.json();
