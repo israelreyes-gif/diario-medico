@@ -31,7 +31,6 @@ body{ display:flex; justify-content:center; }
   position:relative;
 }
 
-/* AUTH SCREEN */
 .auth-wrap{
   flex:1; display:flex; flex-direction:column; justify-content:center;
   padding:24px 28px; overflow-y:auto;
@@ -157,13 +156,29 @@ header{
 }
 .sheet-handle{ width:36px; height:4px; border-radius:3px; background:var(--line); margin:8px auto 16px; }
 .sheet h3{ font-family:'Fraunces', serif; font-size:20px; margin:0 0 16px; }
-.field{ margin-bottom:14px; }
+.field{ margin-bottom:14px; position:relative; }
 .field label{ font-size:12px; font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.03em; }
 .field input, .field textarea{
   width:100%; margin-top:6px; padding:11px 12px; border-radius:12px;
   border:1px solid var(--line); background:var(--cream); font-family:inherit; font-size:14.5px; color:var(--ink);
 }
 .field textarea{ resize:none; height:44px; }
+
+.autocomplete-field{ position:relative; }
+.autocomplete-list{
+  position:absolute; top:100%; left:0; right:0; margin-top:2px;
+  background:var(--paper); border:1px solid var(--line); border-radius:12px;
+  box-shadow:0 6px 18px rgba(51,48,43,0.12);
+  max-height:200px; overflow-y:auto; z-index:20; display:none;
+}
+.autocomplete-list.show{ display:block; }
+.autocomplete-item{
+  padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--line);
+}
+.autocomplete-item:last-child{ border-bottom:none; }
+.autocomplete-item:active{ background:var(--cream); }
+.autocomplete-item .n{ font-size:13.5px; font-weight:500; color:var(--ink); }
+.autocomplete-item .l{ font-size:11px; color:var(--ink-soft); margin-top:1px; }
 
 .dose-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:6px; }
 .dose-grid .mini-label{ font-size:11px; font-weight:600; display:flex; align-items:center; gap:5px; margin-bottom:5px; }
