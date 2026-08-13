@@ -1,0 +1,12 @@
+{
+  "name": "diario-medico-worker",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-13",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "diario-medico-db",
+      "database_id": "TU_DATABASE_ID_AQUI"
+    }
+  ]
+}
