@@ -13,7 +13,38 @@
 <title>Diario médico</title>
 </head>
 <body>
-<div class="device">
+
+<!-- AUTH SCREEN -->
+<div class="device" id="authScreen">
+  <div class="auth-wrap">
+    <div class="app-icon auth-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l.5.5.5-.5a5 5 0 0 1 7 7l-3 3"/>
+        <path d="M14 15l2 2 4-4"/>
+      </svg>
+    </div>
+    <h1 class="auth-title">Diario médico</h1>
+    <p class="auth-subtitle" id="authSubtitle">Inicia sesión para ver tu pastillero</p>
+
+    <div class="field">
+      <label>Usuario</label>
+      <input id="authUser" type="text" autocomplete="username" placeholder="Tu nombre de usuario">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input id="authPassword" type="password" autocomplete="current-password" placeholder="Mínimo 6 caracteres">
+    </div>
+
+    <div class="form-error" id="authError"></div>
+
+    <button class="save-btn" id="authSubmitBtn" onclick="submitAuth()">Entrar</button>
+
+    <button class="auth-switch" id="authSwitchBtn" onclick="toggleAuthMode()">¿No tienes cuenta? Regístrate</button>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div class="device" id="appScreen" style="display:none;">
 
   <header>
     <div class="brand">
@@ -25,14 +56,22 @@
       </div>
       <div>
         <h1>Diario médico</h1>
-        <span>Medicación de hoy</span>
+        <span id="userLabel">Medicación de hoy</span>
       </div>
     </div>
-    <button class="history-btn" onclick="toggleHistory(true)" aria-label="Ver histórico">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>
-      </svg>
-    </button>
+    <div class="header-actions">
+      <button class="history-btn" onclick="toggleHistory(true)" aria-label="Ver histórico">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>
+        </svg>
+      </button>
+      <button class="history-btn" onclick="logout()" aria-label="Cerrar sesión">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
+        </svg>
+      </button>
+    </div>
   </header>
 
   <div class="section-eyebrow">
