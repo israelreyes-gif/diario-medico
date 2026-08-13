@@ -1,9 +1,9 @@
-// API del Diario Médico — gestiona el pastillero actual y su histórico de cambios
+// API del Diario Médico — usuarios, pastillero e histórico, todo por usuario
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 function json(data, status = 200) {
@@ -13,10 +13,141 @@ function json(data, status = 200) {
   });
 }
 
-async function getMedicamentos(env) {
+// ---------- Utilidades de contraseña ----------
+
+function bufferToHex(buffer) {
+  return [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function generarSalt() {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return bufferToHex(bytes.buffer);
+}
+
+async function hashPassword(password, salt) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + salt);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return bufferToHex(hashBuffer);
+}
+
+function generarToken() {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return bufferToHex(bytes.buffer);
+}
+
+// ---------- Autenticación ----------
+
+async function handleRegister(request, env) {
+  const body = await request.json();
+  const usuario = (body.usuario || "").trim();
+  const password = body.password || "";
+
+  if (usuario.length < 3) {
+    return json({ error: "El nombre de usuario debe tener al menos 3 caracteres." }, 400);
+  }
+  if (password.length < 6) {
+    return json({ error: "La contraseña debe tener al menos 6 caracteres." }, 400);
+  }
+
+  const existente = await env.DB.prepare("SELECT id FROM usuarios WHERE nombre = ?").bind(usuario).first();
+  if (existente) {
+    return json({ error: "Ese nombre de usuario ya existe." }, 400);
+  }
+
+  const salt = generarSalt();
+  const hash = await hashPassword(password, salt);
+  const ahora = new Date().toISOString();
+
+  const nuevoUsuario = await env.DB.prepare(
+    "INSERT INTO usuarios (nombre, pin_hash, pin_salt, creado_en) VALUES (?, ?, ?, ?) RETURNING id"
+  )
+    .bind(usuario, hash, salt, ahora)
+    .first();
+
+  const token = await crearSesion(env, nuevoUsuario.id);
+  return json({ token, usuario });
+}
+
+async function handleLogin(request, env) {
+  const body = await request.json();
+  const usuario = (body.usuario || "").trim();
+  const password = body.password || "";
+
+  const fila = await env.DB.prepare("SELECT id, pin_hash, pin_salt FROM usuarios WHERE nombre = ?")
+    .bind(usuario)
+    .first();
+
+  if (!fila) {
+    return json({ error: "Usuario o contraseña incorrectos." }, 401);
+  }
+
+  const hashCalculado = await hashPassword(password, fila.pin_salt);
+  if (hashCalculado !== fila.pin_hash) {
+    return json({ error: "Usuario o contraseña incorrectos." }, 401);
+  }
+
+  const token = await crearSesion(env, fila.id);
+  return json({ token, usuario });
+}
+
+async function crearSesion(env, usuarioId) {
+  const token = generarToken();
+  const ahora = new Date();
+  const expira = new Date(ahora.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  await env.DB.prepare(
+    "INSERT INTO sesiones (token, usuario_id, creado_en, expira_en) VALUES (?, ?, ?, ?)"
+  )
+    .bind(token, usuarioId, ahora.toISOString(), expira.toISOString())
+    .run();
+
+  return token;
+}
+
+// Comprueba la sesión y, si es válida, renueva su caducidad otros 30 días
+async function verificarSesion(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const token = authHeader.replace("Bearer ", "").trim();
+  if (!token) return null;
+
+  const sesion = await env.DB.prepare(
+    "SELECT usuario_id, expira_en FROM sesiones WHERE token = ?"
+  )
+    .bind(token)
+    .first();
+
+  if (!sesion) return null;
+  if (new Date(sesion.expira_en) < new Date()) {
+    await env.DB.prepare("DELETE FROM sesiones WHERE token = ?").bind(token).run();
+    return null;
+  }
+
+  const nuevaExpira = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  await env.DB.prepare("UPDATE sesiones SET expira_en = ? WHERE token = ?")
+    .bind(nuevaExpira, token)
+    .run();
+
+  return sesion.usuario_id;
+}
+
+async function handleLogout(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const token = authHeader.replace("Bearer ", "").trim();
+  if (token) {
+    await env.DB.prepare("DELETE FROM sesiones WHERE token = ?").bind(token).run();
+  }
+  return json({ ok: true });
+}
+
+// ---------- Medicamentos (por usuario) ----------
+
+async function getMedicamentos(env, usuarioId) {
   const { results } = await env.DB.prepare(
-    "SELECT id, nombre, desayuno, comida, cena, nota FROM medicamentos ORDER BY id ASC"
-  ).all();
+    "SELECT id, nombre, desayuno, comida, cena, nota FROM medicamentos WHERE usuario_id = ? ORDER BY id ASC"
+  )
+    .bind(usuarioId)
+    .all();
   return results;
 }
 
@@ -35,12 +166,12 @@ function sonIguales(listaA, listaB) {
   return JSON.stringify(normaliza(listaA)) === JSON.stringify(normaliza(listaB));
 }
 
-async function guardarSnapshot(env, medicamentos) {
+async function guardarSnapshot(env, usuarioId, medicamentos) {
   const ahora = new Date().toISOString();
   const snapshotResult = await env.DB.prepare(
-    "INSERT INTO snapshots (creado_en) VALUES (?) RETURNING id"
+    "INSERT INTO snapshots (creado_en, usuario_id) VALUES (?, ?) RETURNING id"
   )
-    .bind(ahora)
+    .bind(ahora, usuarioId)
     .first();
   const snapshotId = snapshotResult.id;
 
@@ -54,7 +185,7 @@ async function guardarSnapshot(env, medicamentos) {
   }
 }
 
-async function handlePostMedicamentos(request, env) {
+async function handlePostMedicamentos(request, env, usuarioId) {
   const body = await request.json();
   const nuevaLista = Array.isArray(body) ? body : body.medicamentos;
 
@@ -72,12 +203,11 @@ async function handlePostMedicamentos(request, env) {
     }
   }
 
-  const listaActual = await getMedicamentos(env);
-
-  // Solo creamos una foto nueva del histórico si la lista ha cambiado de verdad
   const ultimoSnapshot = await env.DB.prepare(
-    "SELECT id FROM snapshots ORDER BY id DESC LIMIT 1"
-  ).first();
+    "SELECT id FROM snapshots WHERE usuario_id = ? ORDER BY id DESC LIMIT 1"
+  )
+    .bind(usuarioId)
+    .first();
 
   let debeCrearSnapshot = true;
   if (ultimoSnapshot) {
@@ -89,35 +219,32 @@ async function handlePostMedicamentos(request, env) {
     debeCrearSnapshot = !sonIguales(medsUltimoSnapshot, nuevaLista);
   }
 
-  if (debeCrearSnapshot && listaActual.length > 0) {
-    // Guardamos cómo estaba el pastillero justo antes de este cambio, no vacío ni la lista nueva
-  }
-
   const ahora = new Date().toISOString();
 
-  // Reemplazamos el pastillero actual por la nueva lista
-  await env.DB.prepare("DELETE FROM medicamentos").run();
+  await env.DB.prepare("DELETE FROM medicamentos WHERE usuario_id = ?").bind(usuarioId).run();
   for (const m of nuevaLista) {
     await env.DB.prepare(
-      `INSERT INTO medicamentos (nombre, desayuno, comida, cena, nota, actualizado_en)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO medicamentos (nombre, desayuno, comida, cena, nota, actualizado_en, usuario_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
-      .bind(m.nombre, m.desayuno || 0, m.comida || 0, m.cena || 0, m.nota || "", ahora)
+      .bind(m.nombre, m.desayuno || 0, m.comida || 0, m.cena || 0, m.nota || "", ahora, usuarioId)
       .run();
   }
 
   if (debeCrearSnapshot) {
-    await guardarSnapshot(env, nuevaLista);
+    await guardarSnapshot(env, usuarioId, nuevaLista);
   }
 
-  const listaFinal = await getMedicamentos(env);
+  const listaFinal = await getMedicamentos(env, usuarioId);
   return json({ medicamentos: listaFinal });
 }
 
-async function handleGetHistorico(env) {
+async function handleGetHistorico(env, usuarioId) {
   const { results: snapshots } = await env.DB.prepare(
-    "SELECT id, creado_en FROM snapshots ORDER BY id DESC"
-  ).all();
+    "SELECT id, creado_en FROM snapshots WHERE usuario_id = ? ORDER BY id DESC"
+  )
+    .bind(usuarioId)
+    .all();
 
   const historico = [];
   for (const snap of snapshots) {
@@ -132,6 +259,8 @@ async function handleGetHistorico(env) {
   return json({ historico });
 }
 
+// ---------- Rutas ----------
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -141,17 +270,35 @@ export default {
     }
 
     try {
+      if (url.pathname === "/register" && request.method === "POST") {
+        return await handleRegister(request, env);
+      }
+
+      if (url.pathname === "/login" && request.method === "POST") {
+        return await handleLogin(request, env);
+      }
+
+      if (url.pathname === "/logout" && request.method === "POST") {
+        return await handleLogout(request, env);
+      }
+
+      // Todo lo demás requiere sesión válida
+      const usuarioId = await verificarSesion(request, env);
+      if (!usuarioId) {
+        return json({ error: "Sesión no válida o caducada. Inicia sesión de nuevo." }, 401);
+      }
+
       if (url.pathname === "/medicamentos" && request.method === "GET") {
-        const medicamentos = await getMedicamentos(env);
+        const medicamentos = await getMedicamentos(env, usuarioId);
         return json({ medicamentos });
       }
 
       if (url.pathname === "/medicamentos" && request.method === "POST") {
-        return await handlePostMedicamentos(request, env);
+        return await handlePostMedicamentos(request, env, usuarioId);
       }
 
       if (url.pathname === "/historico" && request.method === "GET") {
-        return await handleGetHistorico(env);
+        return await handleGetHistorico(env, usuarioId);
       }
 
       return json({ error: "Ruta no encontrada" }, 404);
