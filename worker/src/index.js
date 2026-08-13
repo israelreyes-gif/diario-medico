@@ -182,8 +182,11 @@ async function handleBuscarMedicamentos(request) {
 
 // ---------- Información detallada de un medicamento (ficha técnica CIMA) ----------
 
+// Quita la cabecera entera de la página (título, scripts, estilos) y cualquier bloque de
+// <script>/<style> suelto, antes de eliminar el resto de etiquetas HTML.
 function stripHtml(html) {
   return html
+    .replace(/<head[\s\S]*?<\/head>/gi, " ")
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]*>/g, " ")
@@ -195,24 +198,6 @@ function stripHtml(html) {
     .replace(/&amp;/g, "&")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-// El endpoint de CIMA devuelve una LISTA de secciones (a veces con subsecciones anidadas dentro de
-// cada una en la propiedad "secciones"), no un único campo de texto. Esta función recorre esa
-// estructura recursivamente y junta todo el texto real que encuentra.
-function extraerTextoDeSecciones(nodo, acumulado) {
-  if (Array.isArray(nodo)) {
-    nodo.forEach((item) => extraerTextoDeSecciones(item, acumulado));
-    return;
-  }
-  if (nodo && typeof nodo === "object") {
-    if (typeof nodo.contenido === "string" && nodo.contenido.trim()) {
-      acumulado.push(stripHtml(nodo.contenido));
-    }
-    if (nodo.secciones) {
-      extraerTextoDeSecciones(nodo.secciones, acumulado);
-    }
-  }
 }
 
 const SECCIONES_FICHA_TECNICA = [
@@ -250,15 +235,11 @@ async function handleInfoMedicamento(request) {
     for (const s of SECCIONES_FICHA_TECNICA) {
       try {
         const seccionRes = await fetch(
-          `https://cima.aemps.es/cima/rest/docSegmentado/contenido/1?nregistro=${encodeURIComponent(nregistro)}&seccion=${encodeURIComponent(s.id)}`
+          `https://cima.aemps.es/cima/dochtml/ft/${nregistro}/${s.id}/FichaTecnica.html`
         );
         if (!seccionRes.ok) continue;
-        const seccionData = await seccionRes.json();
-
-        const partes = [];
-        extraerTextoDeSecciones(seccionData, partes);
-        const texto = partes.join(" ").replace(/\s+/g, " ").trim();
-
+        const html = await seccionRes.text();
+        const texto = stripHtml(html);
         if (texto && texto.length > 5) {
           secciones.push({ titulo: s.titulo, texto });
         }
