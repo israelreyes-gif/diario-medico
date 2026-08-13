@@ -103,48 +103,55 @@
 <div class="overlay" id="formOverlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <h3 id="formTitle">Añadir medicación</h3>
-    <div class="field autocomplete-field">
-      <label>Nombre del medicamento</label>
-      <input id="medName" type="text" placeholder="Ej. Enalapril 10mg" autocomplete="off">
-      <div class="autocomplete-list" id="autocompleteList"></div>
+    <div class="info-header">
+      <h3 id="formTitle">Añadir medicación</h3>
+      <button class="info-close" onclick="closeForm()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
     </div>
+    <div class="sheet-body">
+      <div class="field autocomplete-field">
+        <label>Nombre del medicamento</label>
+        <input id="medName" type="text" placeholder="Ej. Enalapril 10mg" autocomplete="off">
+        <div class="autocomplete-list" id="autocompleteList"></div>
+      </div>
 
-    <div class="dose-grid">
-      <div>
-        <div class="mini-label dawn-c"><span class="dot"></span>Desayuno</div>
-        <div class="stepper" data-key="morning">
-          <button type="button" onclick="stepDose('morning',-0.25)">−</button>
-          <div><div class="val" id="valMorning">0</div><span class="unit">comp</span></div>
-          <button type="button" onclick="stepDose('morning',0.25)">+</button>
+      <div class="dose-grid">
+        <div>
+          <div class="mini-label dawn-c"><span class="dot"></span>Desayuno</div>
+          <div class="stepper" data-key="morning">
+            <button type="button" onclick="stepDose('morning',-0.25)">−</button>
+            <div><div class="val" id="valMorning">0</div><span class="unit">comp</span></div>
+            <button type="button" onclick="stepDose('morning',0.25)">+</button>
+          </div>
+        </div>
+        <div>
+          <div class="mini-label noon-c"><span class="dot"></span>Comida</div>
+          <div class="stepper" data-key="noon">
+            <button type="button" onclick="stepDose('noon',-0.25)">−</button>
+            <div><div class="val" id="valNoon">0</div><span class="unit">comp</span></div>
+            <button type="button" onclick="stepDose('noon',0.25)">+</button>
+          </div>
+        </div>
+        <div>
+          <div class="mini-label dusk-c"><span class="dot"></span>Cena</div>
+          <div class="stepper" data-key="night">
+            <button type="button" onclick="stepDose('night',-0.25)">−</button>
+            <div><div class="val" id="valNight">0</div><span class="unit">comp</span></div>
+            <button type="button" onclick="stepDose('night',0.25)">+</button>
+          </div>
         </div>
       </div>
-      <div>
-        <div class="mini-label noon-c"><span class="dot"></span>Comida</div>
-        <div class="stepper" data-key="noon">
-          <button type="button" onclick="stepDose('noon',-0.25)">−</button>
-          <div><div class="val" id="valNoon">0</div><span class="unit">comp</span></div>
-          <button type="button" onclick="stepDose('noon',0.25)">+</button>
-        </div>
+
+      <div class="form-error" id="formError">Añade al menos una dosis (desayuno, comida o cena) antes de guardar.</div>
+
+      <div class="field">
+        <label>Nota (antes/con/después de la comida...)</label>
+        <textarea id="medNote" placeholder="Ej. Con el desayuno, en ayunas antes de cenar..."></textarea>
       </div>
-      <div>
-        <div class="mini-label dusk-c"><span class="dot"></span>Cena</div>
-        <div class="stepper" data-key="night">
-          <button type="button" onclick="stepDose('night',-0.25)">−</button>
-          <div><div class="val" id="valNight">0</div><span class="unit">comp</span></div>
-          <button type="button" onclick="stepDose('night',0.25)">+</button>
-        </div>
-      </div>
+
+      <button class="save-btn" id="saveBtn" onclick="saveMed()">Guardar medicación</button>
     </div>
-
-    <div class="form-error" id="formError">Añade al menos una dosis (desayuno, comida o cena) antes de guardar.</div>
-
-    <div class="field">
-      <label>Nota (antes/con/después de la comida...)</label>
-      <textarea id="medNote" placeholder="Ej. Con el desayuno, en ayunas antes de cenar..."></textarea>
-    </div>
-
-    <button class="save-btn" id="saveBtn" onclick="saveMed()">Guardar medicación</button>
   </div>
 </div>
 
@@ -152,8 +159,15 @@
 <div class="overlay" id="historyOverlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <h3>Histórico de cambios</h3>
-    <div class="timeline" id="timeline">Cargando...</div>
+    <div class="info-header">
+      <h3>Histórico de cambios</h3>
+      <button class="info-close" onclick="toggleHistory(false)" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <div class="timeline" id="timeline">Cargando...</div>
+    </div>
   </div>
 </div>
 
@@ -167,8 +181,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
       </button>
     </div>
-    <p class="info-source">Fuente: ficha técnica oficial (CIMA · AEMPS)</p>
-    <div id="infoContent">Cargando...</div>
+    <div class="sheet-body">
+      <p class="info-source">Fuente: ficha técnica oficial (CIMA · AEMPS)</p>
+      <div id="infoContent">Cargando...</div>
+    </div>
   </div>
 </div>
 
