@@ -196,6 +196,39 @@ function elegirMedicamento(nombre) {
   document.getElementById('autocompleteList').classList.remove('show');
 }
 
+// ---------- Información del medicamento ----------
+
+async function verInfo(nombre) {
+  document.getElementById('infoTitle').textContent = nombre;
+  const contentEl = document.getElementById('infoContent');
+  contentEl.innerHTML = 'Cargando...';
+  document.getElementById('infoOverlay').classList.add('show');
+
+  try {
+    const res = await fetch(`${API_URL}/medicamento-info?nombre=${encodeURIComponent(nombre)}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      contentEl.innerHTML = `<p class="info-error">${data.error || 'No se encontró información para este medicamento.'}</p>`;
+      return;
+    }
+
+    if (!data.secciones || data.secciones.length === 0) {
+      contentEl.innerHTML = '<p class="info-empty">No hay información detallada disponible para este medicamento.</p>';
+      return;
+    }
+
+    contentEl.innerHTML = data.secciones.map(s => `
+      <div class="info-section">
+        <h4>${s.titulo}</h4>
+        <p>${s.texto}</p>
+      </div>
+    `).join('');
+  } catch (err) {
+    contentEl.innerHTML = '<p class="info-error">No se pudo cargar la información. Comprueba tu conexión.</p>';
+  }
+}
+
 // ---------- Dosis ----------
 
 function fmtDose(n) {
@@ -263,9 +296,14 @@ function render() {
             <div class="med-name">${m.nombre}</div>
             ${m.nota ? `<div class="med-meta">${m.nota}</div>` : ''}
           </div>
-          <button class="edit-dot" onclick="editMed(${m.id})">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-          </button>
+          <div class="med-actions">
+            <button class="edit-dot" onclick="verInfo('${m.nombre.replace(/'/g, "\\'")}')" aria-label="Información">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="edit-dot" onclick="editMed(${m.id})" aria-label="Editar">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
+          </div>
         </div>
         <div class="dose-row">
           ${doseChip('dawn-c', 'Desayuno', m.desayuno)}
@@ -494,6 +532,7 @@ function formatFecha(iso) {
 
 document.getElementById('formOverlay').addEventListener('click', e => { if (e.target.id === 'formOverlay') e.target.classList.remove('show'); });
 document.getElementById('historyOverlay').addEventListener('click', e => { if (e.target.id === 'historyOverlay') e.target.classList.remove('show'); });
+document.getElementById('infoOverlay').addEventListener('click', e => { if (e.target.id === 'infoOverlay') e.target.classList.remove('show'); });
 
 // ---------- Arranque ----------
 
