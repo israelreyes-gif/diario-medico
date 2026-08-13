@@ -31,12 +31,29 @@ body{ display:flex; justify-content:center; }
   position:relative;
 }
 
+/* AUTH SCREEN */
+.auth-wrap{
+  flex:1; display:flex; flex-direction:column; justify-content:center;
+  padding:24px 28px; overflow-y:auto;
+}
+.auth-icon{ align-self:center; width:64px; height:64px; border-radius:18px; margin-bottom:18px; }
+.auth-icon svg{ width:34px; height:34px; }
+.auth-title{
+  font-family:'Fraunces', serif; font-size:26px; font-weight:600; text-align:center; margin:0 0 4px;
+}
+.auth-subtitle{ text-align:center; color:var(--ink-soft); font-size:13.5px; margin:0 0 28px; }
+.auth-switch{
+  background:none; border:none; color:var(--teal-deep); font-size:13.5px; font-weight:600;
+  margin-top:14px; cursor:pointer; font-family:'Work Sans', sans-serif;
+}
+
 header{
   padding:22px 20px 18px;
   display:flex; align-items:center; justify-content:space-between;
   flex-shrink:0;
 }
 .brand{ display:flex; align-items:center; gap:12px; }
+.header-actions{ display:flex; gap:8px; }
 .app-icon{
   width:44px; height:44px; border-radius:12px;
   background:linear-gradient(155deg, var(--teal) 0%, var(--teal-deep) 100%);
