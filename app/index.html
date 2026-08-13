@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1E4744">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Diario médico">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/styles.css">
+<title>Diario médico</title>
+</head>
+<body>
+<div class="device">
+
+  <header>
+    <div class="brand">
+      <div class="app-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l.5.5.5-.5a5 5 0 0 1 7 7l-3 3"/>
+          <path d="M14 15l2 2 4-4"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Diario médico</h1>
+        <span>Medicación de hoy</span>
+      </div>
+    </div>
+    <button class="history-btn" onclick="toggleHistory(true)" aria-label="Ver histórico">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>
+      </svg>
+    </button>
+  </header>
+
+  <div class="section-eyebrow">
+    <h2>Pastillero</h2>
+    <span class="count" id="count">Cargando...</span>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <button class="fab" onclick="openForm()" aria-label="Añadir medicación">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+</div>
+
+<!-- FORM SHEET -->
+<div class="overlay" id="formOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="formTitle">Añadir medicación</h3>
+    <div class="field">
+      <label>Nombre del medicamento</label>
+      <input id="medName" type="text" placeholder="Ej. Enalapril 10mg">
+    </div>
+
+    <div class="dose-grid">
+      <div>
+        <div class="mini-label dawn-c"><span class="dot"></span>Desayuno</div>
+        <div class="stepper" data-key="morning">
+          <button type="button" onclick="stepDose('morning',-0.25)">−</button>
+          <div><div class="val" id="valMorning">0</div><span class="unit">comp</span></div>
+          <button type="button" onclick="stepDose('morning',0.25)">+</button>
+        </div>
+      </div>
+      <div>
+        <div class="mini-label noon-c"><span class="dot"></span>Comida</div>
+        <div class="stepper" data-key="noon">
+          <button type="button" onclick="stepDose('noon',-0.25)">−</button>
+          <div><div class="val" id="valNoon">0</div><span class="unit">comp</span></div>
+          <button type="button" onclick="stepDose('noon',0.25)">+</button>
+        </div>
+      </div>
+      <div>
+        <div class="mini-label dusk-c"><span class="dot"></span>Cena</div>
+        <div class="stepper" data-key="night">
+          <button type="button" onclick="stepDose('night',-0.25)">−</button>
+          <div><div class="val" id="valNight">0</div><span class="unit">comp</span></div>
+          <button type="button" onclick="stepDose('night',0.25)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-error" id="formError">Añade al menos una dosis (desayuno, comida o cena) antes de guardar.</div>
+
+    <div class="field">
+      <label>Nota (antes/con/después de la comida...)</label>
+      <textarea id="medNote" placeholder="Ej. Con el desayuno, en ayunas antes de cenar..."></textarea>
+    </div>
+
+    <button class="save-btn" id="saveBtn" onclick="saveMed()">Guardar medicación</button>
+  </div>
+</div>
+
+<!-- HISTORY SHEET -->
+<div class="overlay" id="historyOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3>Histórico de cambios</h3>
+    <div class="timeline" id="timeline">Cargando...</div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
