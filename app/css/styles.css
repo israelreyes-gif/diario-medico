@@ -116,6 +116,7 @@ header{
 .med-top{ display:flex; justify-content:space-between; align-items:flex-start; }
 .med-name{ font-family:'Fraunces', serif; font-size:17px; font-weight:600; }
 .med-meta{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+.med-actions{ display:flex; gap:6px; flex-shrink:0; }
 .edit-dot{
   width:30px; height:30px; border-radius:50%; background:var(--cream);
   display:flex; align-items:center; justify-content:center; cursor:pointer; border:none;
@@ -219,3 +220,13 @@ header{
 .snap-med .d{ color:var(--ink-soft); font-size:12px; text-align:right; }
 .snap-med.changed .n{ color:var(--noon); font-weight:600; }
 .snap-empty{ font-size:12.5px; color:var(--ink-soft); font-style:italic; padding:4px 0; }
+
+.info-source{ font-size:11px; color:var(--ink-soft); margin:-8px 0 16px; }
+.info-section{ margin-bottom:18px; }
+.info-section h4{
+  font-family:'Fraunces', serif; font-size:14.5px; font-weight:600; margin:0 0 6px;
+  color:var(--teal-deep);
+}
+.info-section p{ font-size:13.5px; line-height:1.55; color:var(--ink); margin:0; }
+.info-empty{ font-size:13px; color:var(--ink-soft); text-align:center; padding:20px 0; }
+.info-error{ font-size:13px; color:var(--danger); text-align:center; padding:20px 0; }
