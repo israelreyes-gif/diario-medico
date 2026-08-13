@@ -6,7 +6,8 @@ const USER_KEY = 'diario_medico_usuario';
 let meds = [];
 let editingId = null;
 let currentDose = { morning: 0, noon: 0, night: 0 };
-let authMode = 'login'; // 'login' | 'register'
+let authMode = 'login';
+let autocompleteTimer = null;
 
 // ---------- Autenticación ----------
 
@@ -25,12 +26,20 @@ function borrarSesion() {
 
 function toggleAuthMode() {
   authMode = authMode === 'login' ? 'register' : 'login';
+  const esRegistro = authMode === 'register';
+
   document.getElementById('authSubtitle').textContent =
-    authMode === 'login' ? 'Inicia sesión para ver tu pastillero' : 'Crea una cuenta nueva';
-  document.getElementById('authSubmitBtn').textContent = authMode === 'login' ? 'Entrar' : 'Crear cuenta';
+    esRegistro ? 'Crea una cuenta nueva' : 'Inicia sesión para ver tu pastillero';
+  document.getElementById('authSubmitBtn').textContent = esRegistro ? 'Crear cuenta' : 'Entrar';
   document.getElementById('authSwitchBtn').textContent =
-    authMode === 'login' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión';
+    esRegistro ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate';
+  document.getElementById('fieldNombreCompleto').style.display = esRegistro ? 'block' : 'none';
+  document.getElementById('fieldConfirmPassword').style.display = esRegistro ? 'block' : 'none';
   document.getElementById('authError').classList.remove('show');
+}
+
+function passwordEsSegura(password) {
+  return password.length >= 8 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
 }
 
 async function submitAuth() {
@@ -46,6 +55,28 @@ async function submitAuth() {
     return;
   }
 
+  let nombreCompleto = '';
+  if (authMode === 'register') {
+    nombreCompleto = document.getElementById('authNombreCompleto').value.trim();
+    const passwordConfirm = document.getElementById('authPasswordConfirm').value;
+
+    if (!nombreCompleto) {
+      errorEl.textContent = 'Indica tu nombre y apellidos.';
+      errorEl.classList.add('show');
+      return;
+    }
+    if (!passwordEsSegura(password)) {
+      errorEl.textContent = 'La contraseña debe tener al menos 8 caracteres, con letras y números.';
+      errorEl.classList.add('show');
+      return;
+    }
+    if (password !== passwordConfirm) {
+      errorEl.textContent = 'Las contraseñas no coinciden.';
+      errorEl.classList.add('show');
+      return;
+    }
+  }
+
   const endpoint = authMode === 'login' ? '/login' : '/register';
   btn.disabled = true;
   btn.textContent = authMode === 'login' ? 'Entrando...' : 'Creando...';
@@ -54,7 +85,7 @@ async function submitAuth() {
     const res = await fetch(`${API_URL}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario, password }),
+      body: JSON.stringify({ usuario, password, nombreCompleto }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error al acceder');
@@ -78,9 +109,7 @@ async function logout() {
       method: 'POST',
       headers: { Authorization: `Bearer ${getToken()}` },
     });
-  } catch (err) {
-    // aunque falle la llamada, cerramos sesión localmente igualmente
-  }
+  } catch (err) {}
   borrarSesion();
   mostrarAuth();
 }
@@ -99,7 +128,6 @@ function mostrarApp() {
   loadMedicamentos();
 }
 
-// Envuelve fetch añadiendo el token; si la sesión ya no es válida, vuelve a la pantalla de acceso
 async function apiFetch(path, options = {}) {
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -114,6 +142,58 @@ async function apiFetch(path, options = {}) {
     throw new Error('Sesión caducada, inicia sesión de nuevo.');
   }
   return res;
+}
+
+// ---------- Autocompletado de medicamentos (CIMA) ----------
+
+function initAutocomplete() {
+  const input = document.getElementById('medName');
+  const list = document.getElementById('autocompleteList');
+
+  input.addEventListener('input', () => {
+    clearTimeout(autocompleteTimer);
+    const q = input.value.trim();
+    if (q.length < 3) {
+      list.classList.remove('show');
+      list.innerHTML = '';
+      return;
+    }
+    autocompleteTimer = setTimeout(() => buscarMedicamento(q), 350);
+  });
+
+  input.addEventListener('blur', () => {
+    setTimeout(() => list.classList.remove('show'), 150);
+  });
+}
+
+async function buscarMedicamento(q) {
+  const list = document.getElementById('autocompleteList');
+  try {
+    const res = await fetch(`${API_URL}/medicamentos-buscar?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    const resultados = data.resultados || [];
+
+    if (resultados.length === 0) {
+      list.classList.remove('show');
+      list.innerHTML = '';
+      return;
+    }
+
+    list.innerHTML = resultados.map(r => `
+      <div class="autocomplete-item" onclick="elegirMedicamento('${r.nombre.replace(/'/g, "\\'")}')">
+        <div class="n">${r.nombre}</div>
+        ${r.laboratorio ? `<div class="l">${r.laboratorio}</div>` : ''}
+      </div>
+    `).join('');
+    list.classList.add('show');
+  } catch (err) {
+    list.classList.remove('show');
+  }
+}
+
+function elegirMedicamento(nombre) {
+  document.getElementById('medName').value = nombre;
+  document.getElementById('autocompleteList').classList.remove('show');
 }
 
 // ---------- Dosis ----------
@@ -256,6 +336,7 @@ function openForm() {
   document.getElementById('medName').value = '';
   document.getElementById('medNote').value = '';
   document.getElementById('formError').classList.remove('show');
+  document.getElementById('autocompleteList').classList.remove('show');
   ['morning', 'noon', 'night'].forEach(k => setStepperDisplay(k, 0));
   document.getElementById('formOverlay').classList.add('show');
 }
@@ -268,6 +349,7 @@ function editMed(id) {
   document.getElementById('medName').value = m.nombre;
   document.getElementById('medNote').value = m.nota || '';
   document.getElementById('formError').classList.remove('show');
+  document.getElementById('autocompleteList').classList.remove('show');
   ['morning', 'noon', 'night'].forEach(k => setStepperDisplay(k, currentDose[k]));
   document.getElementById('formOverlay').classList.add('show');
 }
@@ -414,6 +496,8 @@ document.getElementById('formOverlay').addEventListener('click', e => { if (e.ta
 document.getElementById('historyOverlay').addEventListener('click', e => { if (e.target.id === 'historyOverlay') e.target.classList.remove('show'); });
 
 // ---------- Arranque ----------
+
+initAutocomplete();
 
 if (getToken()) {
   mostrarApp();
