@@ -2,6 +2,7 @@ const API_URL = 'https://diario-medico-worker.israel-reyes.workers.dev';
 const SWIPE_OPEN_X = -80;
 const TOKEN_KEY = 'diario_medico_token';
 const USER_KEY = 'diario_medico_usuario';
+const NOMBRE_KEY = 'diario_medico_nombre_completo';
 
 let meds = [];
 let editingId = null;
@@ -13,15 +14,18 @@ let autocompleteTimer = null;
 
 function getToken() { return localStorage.getItem(TOKEN_KEY); }
 function getUsuario() { return localStorage.getItem(USER_KEY); }
+function getNombreCompleto() { return localStorage.getItem(NOMBRE_KEY); }
 
-function guardarSesion(token, usuario) {
+function guardarSesion(token, usuario, nombreCompleto) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, usuario);
+  localStorage.setItem(NOMBRE_KEY, nombreCompleto || usuario);
 }
 
 function borrarSesion() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(NOMBRE_KEY);
 }
 
 function toggleAuthMode() {
@@ -90,7 +94,7 @@ async function submitAuth() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Error al acceder');
 
-    guardarSesion(data.token, data.usuario);
+    guardarSesion(data.token, data.usuario, data.nombreCompleto);
     mostrarApp();
   } catch (err) {
     errorEl.textContent = err.message;
@@ -124,7 +128,7 @@ function mostrarAuth() {
 function mostrarApp() {
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('appScreen').style.display = 'flex';
-  document.getElementById('userLabel').textContent = getUsuario();
+  document.getElementById('userLabel').textContent = getNombreCompleto() || getUsuario();
   loadMedicamentos();
 }
 
