@@ -1,4 +1,4 @@
-// API del Diario Médico — usuarios, pastillero e histórico, todo por usuario
+// API del Diario Médico — usuarios, pastillero, histórico y búsqueda de medicamentos (CIMA)
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,18 +36,29 @@ function generarToken() {
   return bufferToHex(bytes.buffer);
 }
 
+function passwordEsSegura(password) {
+  if (password.length < 8) return false;
+  const tieneLetra = /[a-zA-Z]/.test(password);
+  const tieneNumero = /[0-9]/.test(password);
+  return tieneLetra && tieneNumero;
+}
+
 // ---------- Autenticación ----------
 
 async function handleRegister(request, env) {
   const body = await request.json();
   const usuario = (body.usuario || "").trim();
+  const nombreCompleto = (body.nombreCompleto || "").trim();
   const password = body.password || "";
 
   if (usuario.length < 3) {
     return json({ error: "El nombre de usuario debe tener al menos 3 caracteres." }, 400);
   }
-  if (password.length < 6) {
-    return json({ error: "La contraseña debe tener al menos 6 caracteres." }, 400);
+  if (nombreCompleto.length < 3) {
+    return json({ error: "Indica tu nombre y apellidos." }, 400);
+  }
+  if (!passwordEsSegura(password)) {
+    return json({ error: "La contraseña debe tener al menos 8 caracteres, con letras y números." }, 400);
   }
 
   const existente = await env.DB.prepare("SELECT id FROM usuarios WHERE nombre = ?").bind(usuario).first();
@@ -60,13 +71,13 @@ async function handleRegister(request, env) {
   const ahora = new Date().toISOString();
 
   const nuevoUsuario = await env.DB.prepare(
-    "INSERT INTO usuarios (nombre, pin_hash, pin_salt, creado_en) VALUES (?, ?, ?, ?) RETURNING id"
+    "INSERT INTO usuarios (nombre, nombre_completo, pin_hash, pin_salt, creado_en) VALUES (?, ?, ?, ?, ?) RETURNING id"
   )
-    .bind(usuario, hash, salt, ahora)
+    .bind(usuario, nombreCompleto, hash, salt, ahora)
     .first();
 
   const token = await crearSesion(env, nuevoUsuario.id);
-  return json({ token, usuario });
+  return json({ token, usuario, nombreCompleto });
 }
 
 async function handleLogin(request, env) {
@@ -74,7 +85,9 @@ async function handleLogin(request, env) {
   const usuario = (body.usuario || "").trim();
   const password = body.password || "";
 
-  const fila = await env.DB.prepare("SELECT id, pin_hash, pin_salt FROM usuarios WHERE nombre = ?")
+  const fila = await env.DB.prepare(
+    "SELECT id, pin_hash, pin_salt, nombre_completo FROM usuarios WHERE nombre = ?"
+  )
     .bind(usuario)
     .first();
 
@@ -88,7 +101,7 @@ async function handleLogin(request, env) {
   }
 
   const token = await crearSesion(env, fila.id);
-  return json({ token, usuario });
+  return json({ token, usuario, nombreCompleto: fila.nombre_completo });
 }
 
 async function crearSesion(env, usuarioId) {
@@ -105,7 +118,6 @@ async function crearSesion(env, usuarioId) {
   return token;
 }
 
-// Comprueba la sesión y, si es válida, renueva su caducidad otros 30 días
 async function verificarSesion(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const token = authHeader.replace("Bearer ", "").trim();
@@ -138,6 +150,34 @@ async function handleLogout(request, env) {
     await env.DB.prepare("DELETE FROM sesiones WHERE token = ?").bind(token).run();
   }
   return json({ ok: true });
+}
+
+// ---------- Búsqueda de medicamentos (CIMA - AEMPS) ----------
+
+async function handleBuscarMedicamentos(request) {
+  const url = new URL(request.url);
+  const q = (url.searchParams.get("q") || "").trim();
+
+  if (q.length < 3) {
+    return json({ resultados: [] });
+  }
+
+  try {
+    const cimaRes = await fetch(
+      `https://cima.aemps.es/cima/rest/medicamentos?nombre=${encodeURIComponent(q)}&pagina=1`
+    );
+    if (!cimaRes.ok) {
+      return json({ resultados: [] });
+    }
+    const data = await cimaRes.json();
+    const resultados = (data.resultados || []).slice(0, 8).map((m) => ({
+      nombre: m.nombre,
+      laboratorio: m.labtitular || "",
+    }));
+    return json({ resultados });
+  } catch (err) {
+    return json({ resultados: [] });
+  }
 }
 
 // ---------- Medicamentos (por usuario) ----------
@@ -282,7 +322,10 @@ export default {
         return await handleLogout(request, env);
       }
 
-      // Todo lo demás requiere sesión válida
+      if (url.pathname === "/medicamentos-buscar" && request.method === "GET") {
+        return await handleBuscarMedicamentos(request);
+      }
+
       const usuarioId = await verificarSesion(request, env);
       if (!usuarioId) {
         return json({ error: "Sesión no válida o caducada. Inicia sesión de nuevo." }, 401);
