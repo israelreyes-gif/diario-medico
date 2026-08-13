@@ -90,6 +90,7 @@ function openForm() {
   document.getElementById('medName').value = '';
   document.getElementById('medNote').value = '';
   document.getElementById('formError').classList.remove('show');
+  document.getElementById('deleteBtn').classList.remove('show');
   ['morning', 'noon', 'night'].forEach(k => setStepperDisplay(k, 0));
   document.getElementById('formOverlay').classList.add('show');
 }
@@ -102,8 +103,32 @@ function editMed(id) {
   document.getElementById('medName').value = m.nombre;
   document.getElementById('medNote').value = m.nota || '';
   document.getElementById('formError').classList.remove('show');
+  document.getElementById('deleteBtn').classList.add('show');
   ['morning', 'noon', 'night'].forEach(k => setStepperDisplay(k, currentDose[k]));
   document.getElementById('formOverlay').classList.add('show');
+}
+
+async function guardarLista(nuevaLista, botonQueMuestraCarga, textoCarga, textoNormal) {
+  botonQueMuestraCarga.disabled = true;
+  botonQueMuestraCarga.textContent = textoCarga;
+  try {
+    const res = await fetch(`${API_URL}/medicamentos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ medicamentos: nuevaLista }),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Error al guardar');
+    meds = result.medicamentos;
+    render();
+    return true;
+  } catch (err) {
+    alert('No se pudo guardar: ' + err.message);
+    return false;
+  } finally {
+    botonQueMuestraCarga.disabled = false;
+    botonQueMuestraCarga.textContent = textoNormal;
+  }
 }
 
 async function saveMed() {
@@ -133,27 +158,22 @@ async function saveMed() {
   }
 
   const saveBtn = document.getElementById('saveBtn');
-  saveBtn.disabled = true;
-  saveBtn.textContent = 'Guardando...';
+  const ok = await guardarLista(nuevaLista, saveBtn, 'Guardando...', 'Guardar medicación');
+  if (ok) document.getElementById('formOverlay').classList.remove('show');
+}
 
-  try {
-    const res = await fetch(`${API_URL}/medicamentos`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ medicamentos: nuevaLista }),
-    });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error || 'Error al guardar');
+async function deleteMed() {
+  if (!editingId) return;
+  const med = meds.find(m => m.id === editingId);
+  if (!med) return;
 
-    meds = result.medicamentos;
-    render();
-    document.getElementById('formOverlay').classList.remove('show');
-  } catch (err) {
-    alert('No se pudo guardar: ' + err.message);
-  } finally {
-    saveBtn.disabled = false;
-    saveBtn.textContent = 'Guardar medicación';
-  }
+  const confirmado = confirm(`¿Seguro que quieres eliminar "${med.nombre}"? Se guardará en el histórico tal como estaba antes de borrarlo.`);
+  if (!confirmado) return;
+
+  const nuevaLista = meds.filter(m => m.id !== editingId);
+  const deleteBtn = document.getElementById('deleteBtn');
+  const ok = await guardarLista(nuevaLista, deleteBtn, 'Eliminando...', 'Eliminar medicamento');
+  if (ok) document.getElementById('formOverlay').classList.remove('show');
 }
 
 async function toggleHistory(show) {
@@ -166,7 +186,6 @@ async function toggleHistory(show) {
       const data = await res.json();
       const snapshots = data.historico || [];
 
-      // "Ahora" solo se muestra aparte si es distinto de la última foto guardada
       const ultimoIgualAAhora = snapshots.length > 0 && sonListasIguales(snapshots[0].medicamentos, meds);
       const ordered = ultimoIgualAAhora
         ? [{ creado_en: 'Ahora', medicamentos: meds, isCurrent: true }, ...snapshots.slice(1)]
