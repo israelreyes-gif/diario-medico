@@ -1,9 +1,122 @@
 const API_URL = 'https://diario-medico-worker.israel-reyes.workers.dev';
 const SWIPE_OPEN_X = -80;
+const TOKEN_KEY = 'diario_medico_token';
+const USER_KEY = 'diario_medico_usuario';
 
 let meds = [];
 let editingId = null;
 let currentDose = { morning: 0, noon: 0, night: 0 };
+let authMode = 'login'; // 'login' | 'register'
+
+// ---------- Autenticación ----------
+
+function getToken() { return localStorage.getItem(TOKEN_KEY); }
+function getUsuario() { return localStorage.getItem(USER_KEY); }
+
+function guardarSesion(token, usuario) {
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USER_KEY, usuario);
+}
+
+function borrarSesion() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+}
+
+function toggleAuthMode() {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  document.getElementById('authSubtitle').textContent =
+    authMode === 'login' ? 'Inicia sesión para ver tu pastillero' : 'Crea una cuenta nueva';
+  document.getElementById('authSubmitBtn').textContent = authMode === 'login' ? 'Entrar' : 'Crear cuenta';
+  document.getElementById('authSwitchBtn').textContent =
+    authMode === 'login' ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión';
+  document.getElementById('authError').classList.remove('show');
+}
+
+async function submitAuth() {
+  const usuario = document.getElementById('authUser').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errorEl = document.getElementById('authError');
+  const btn = document.getElementById('authSubmitBtn');
+  errorEl.classList.remove('show');
+
+  if (!usuario || !password) {
+    errorEl.textContent = 'Rellena usuario y contraseña.';
+    errorEl.classList.add('show');
+    return;
+  }
+
+  const endpoint = authMode === 'login' ? '/login' : '/register';
+  btn.disabled = true;
+  btn.textContent = authMode === 'login' ? 'Entrando...' : 'Creando...';
+
+  try {
+    const res = await fetch(`${API_URL}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al acceder');
+
+    guardarSesion(data.token, data.usuario);
+    mostrarApp();
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = authMode === 'login' ? 'Entrar' : 'Crear cuenta';
+  }
+}
+
+async function logout() {
+  const confirmado = confirm('¿Cerrar sesión?');
+  if (!confirmado) return;
+  try {
+    await fetch(`${API_URL}/logout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${getToken()}` },
+    });
+  } catch (err) {
+    // aunque falle la llamada, cerramos sesión localmente igualmente
+  }
+  borrarSesion();
+  mostrarAuth();
+}
+
+function mostrarAuth() {
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('authUser').value = '';
+  document.getElementById('authPassword').value = '';
+}
+
+function mostrarApp() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'flex';
+  document.getElementById('userLabel').textContent = getUsuario();
+  loadMedicamentos();
+}
+
+// Envuelve fetch añadiendo el token; si la sesión ya no es válida, vuelve a la pantalla de acceso
+async function apiFetch(path, options = {}) {
+  const res = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  if (res.status === 401) {
+    borrarSesion();
+    mostrarAuth();
+    throw new Error('Sesión caducada, inicia sesión de nuevo.');
+  }
+  return res;
+}
+
+// ---------- Dosis ----------
 
 function fmtDose(n) {
   if (!n || n === 0) return null;
@@ -38,6 +151,8 @@ function doseChip(cls, label, val) {
     <div class="amount">${formatted || '—'}</div>
   </div>`;
 }
+
+// ---------- Render ----------
 
 function render() {
   const list = document.getElementById('list');
@@ -121,14 +236,15 @@ function attachSwipe(cardEl) {
   cardEl.addEventListener('pointercancel', endDrag);
 }
 
+// ---------- Carga y guardado ----------
+
 async function loadMedicamentos() {
   try {
-    const res = await fetch(`${API_URL}/medicamentos`);
+    const res = await apiFetch('/medicamentos');
     const data = await res.json();
     meds = data.medicamentos || [];
     render();
   } catch (err) {
-    document.getElementById('count').textContent = 'Error al cargar';
     console.error(err);
   }
 }
@@ -162,7 +278,7 @@ async function guardarLista(nuevaLista, botonQueMuestraCarga, textoCarga, textoN
     botonQueMuestraCarga.textContent = textoCarga;
   }
   try {
-    const res = await fetch(`${API_URL}/medicamentos`, {
+    const res = await apiFetch('/medicamentos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ medicamentos: nuevaLista }),
@@ -220,7 +336,7 @@ async function deleteMed(id) {
 
   const confirmado = confirm(`¿Seguro que quieres eliminar "${med.nombre}"? Se guardará en el histórico tal como estaba antes de borrarlo.`);
   if (!confirmado) {
-    render(); // vuelve a pintar para que la tarjeta se cierre de nuevo
+    render();
     return;
   }
 
@@ -234,7 +350,7 @@ async function toggleHistory(show) {
     const tl = document.getElementById('timeline');
     tl.innerHTML = 'Cargando...';
     try {
-      const res = await fetch(`${API_URL}/historico`);
+      const res = await apiFetch('/historico');
       const data = await res.json();
       const snapshots = data.historico || [];
 
@@ -297,4 +413,10 @@ function formatFecha(iso) {
 document.getElementById('formOverlay').addEventListener('click', e => { if (e.target.id === 'formOverlay') e.target.classList.remove('show'); });
 document.getElementById('historyOverlay').addEventListener('click', e => { if (e.target.id === 'historyOverlay') e.target.classList.remove('show'); });
 
-loadMedicamentos();
+// ---------- Arranque ----------
+
+if (getToken()) {
+  mostrarApp();
+} else {
+  mostrarAuth();
+}
