@@ -182,8 +182,12 @@ async function handleBuscarMedicamentos(request) {
 
 // ---------- Información detallada de un medicamento (ficha técnica CIMA) ----------
 
+// Elimina bloques enteros de <script> y <style> (con su contenido) antes de quitar el resto de etiquetas,
+// para que no se cuele código JavaScript en el texto mostrado al usuario.
 function stripHtml(html) {
   return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]*>/g, " ")
     .replace(/&nbsp;/g, " ")
     .replace(/&aacute;/g, "á").replace(/&eacute;/g, "é").replace(/&iacute;/g, "í")
@@ -229,12 +233,14 @@ async function handleInfoMedicamento(request) {
     const secciones = [];
     for (const s of SECCIONES_FICHA_TECNICA) {
       try {
+        // Este endpoint devuelve JSON con solo el contenido de la sección (sin la página completa ni scripts)
         const seccionRes = await fetch(
-          `https://cima.aemps.es/cima/dochtml/ft/${nregistro}/${s.id}/FichaTecnica.html`
+          `https://cima.aemps.es/cima/rest/docSegmentado/contenido/1/${s.id}?nregistro=${encodeURIComponent(nregistro)}`
         );
         if (!seccionRes.ok) continue;
-        const html = await seccionRes.text();
-        const texto = stripHtml(html);
+        const seccionData = await seccionRes.json();
+        const contenidoHtml = seccionData.contenido || "";
+        const texto = stripHtml(contenidoHtml);
         if (texto && texto.length > 5) {
           secciones.push({ titulo: s.titulo, texto });
         }
