@@ -202,11 +202,15 @@ function elegirMedicamento(nombre) {
 
 // ---------- Información del medicamento ----------
 
+function toggleInfo(show) {
+  document.getElementById('infoOverlay').classList.toggle('show', show);
+}
+
 async function verInfo(nombre) {
   document.getElementById('infoTitle').textContent = nombre;
   const contentEl = document.getElementById('infoContent');
   contentEl.innerHTML = 'Cargando...';
-  document.getElementById('infoOverlay').classList.add('show');
+  toggleInfo(true);
 
   try {
     const res = await fetch(`${API_URL}/medicamento-info?nombre=${encodeURIComponent(nombre)}`);
@@ -383,6 +387,10 @@ function openForm() {
   document.getElementById('formOverlay').classList.add('show');
 }
 
+function closeForm() {
+  document.getElementById('formOverlay').classList.remove('show');
+}
+
 function editMed(id) {
   const m = meds.find(x => x.id === id);
   editingId = id;
@@ -451,7 +459,7 @@ async function saveMed() {
 
   const saveBtn = document.getElementById('saveBtn');
   const ok = await guardarLista(nuevaLista, saveBtn, 'Guardando...', 'Guardar medicación');
-  if (ok) document.getElementById('formOverlay').classList.remove('show');
+  if (ok) closeForm();
 }
 
 async function deleteMed(id) {
@@ -534,9 +542,9 @@ function formatFecha(iso) {
     ' · ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 }
 
-document.getElementById('formOverlay').addEventListener('click', e => { if (e.target.id === 'formOverlay') e.target.classList.remove('show'); });
-document.getElementById('historyOverlay').addEventListener('click', e => { if (e.target.id === 'historyOverlay') e.target.classList.remove('show'); });
-document.getElementById('infoOverlay').addEventListener('click', e => { if (e.target.id === 'infoOverlay') e.target.classList.remove('show'); });
+document.getElementById('formOverlay').addEventListener('click', e => { if (e.target.id === 'formOverlay') closeForm(); });
+document.getElementById('historyOverlay').addEventListener('click', e => { if (e.target.id === 'historyOverlay') toggleHistory(false); });
+document.getElementById('infoOverlay').addEventListener('click', e => { if (e.target.id === 'infoOverlay') toggleInfo(false); });
 
 // ---------- Arranque ----------
 
