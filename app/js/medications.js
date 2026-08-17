@@ -50,6 +50,8 @@ function elegirMedicamento(nombre) {
   document.getElementById('autocompleteList').classList.remove('show');
 }
 
+const PILL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>';
+
 function render() {
   const list = document.getElementById('list');
   const hint = document.getElementById('swipeHint');
@@ -75,9 +77,12 @@ function render() {
       </button>
       <div class="med-card" data-id="${m.id}">
         <div class="med-top">
-          <div>
-            <div class="med-name">${m.nombre}</div>
-            ${m.nota ? `<div class="med-meta">${m.nota}</div>` : ''}
+          <div class="med-top-left">
+            <div class="med-icon">${PILL_ICON}</div>
+            <div>
+              <div class="med-name">${m.nombre}</div>
+              ${m.nota ? `<div class="med-meta">${m.nota}</div>` : ''}
+            </div>
           </div>
           <div class="med-actions">
             <button class="edit-dot" onclick="verInfo('${m.nombre.replace(/'/g, "\\'")}')" aria-label="Información">
