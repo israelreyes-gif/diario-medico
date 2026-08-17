@@ -5,6 +5,7 @@ document.getElementById('historyOverlay').addEventListener('click', e => { if (e
 document.getElementById('infoOverlay').addEventListener('click', e => { if (e.target.id === 'infoOverlay') toggleInfo(false); });
 
 initAutocomplete();
+renderHomeCards();
 
 if (getToken()) {
   mostrarApp();
