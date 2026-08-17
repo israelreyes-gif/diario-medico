@@ -1,0 +1,33 @@
+.home-header{
+  padding:26px 20px 10px;
+  display:flex; align-items:center; gap:12px;
+  flex-shrink:0; justify-content:space-between;
+}
+.home-header .brand{ display:flex; align-items:center; gap:12px; }
+
+.home-cards{
+  padding:14px 20px 40px; display:flex; flex-direction:column; gap:14px;
+  overflow-y:auto; flex:1; -webkit-overflow-scrolling:touch;
+}
+.home-card{
+  background:var(--paper); border-radius:22px; padding:18px;
+  border:1px solid var(--line); display:flex; align-items:center; gap:16px;
+  cursor:pointer; box-shadow:0 2px 10px rgba(51,48,43,0.04);
+}
+.home-card:active{ transform:scale(0.98); }
+.home-card-icon{
+  width:52px; height:52px; border-radius:16px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.home-card-icon svg{ width:26px; height:26px; stroke:white; }
+.home-card-icon.meds{ background:linear-gradient(155deg, var(--teal) 0%, var(--teal-deep) 100%); }
+.home-card-icon.emergency{ background:linear-gradient(155deg, #C9615B 0%, var(--danger) 100%); }
+.home-card-text{ flex:1; }
+.home-card-text h3{ font-family:'Fraunces', serif; font-size:16.5px; font-weight:600; margin:0 0 3px; }
+.home-card-text p{ font-size:12.5px; color:var(--ink-soft); margin:0; }
+.home-card-arrow{ flex-shrink:0; }
+.home-card-arrow svg{ width:18px; height:18px; stroke:var(--ink-soft); }
+
+.app-icon-btn{
+  border:none; background:none; padding:0; cursor:pointer; display:flex;
+}
