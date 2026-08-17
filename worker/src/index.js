@@ -2,6 +2,7 @@ import { json, corsHeaders } from "./utils.js";
 import { handleRegister, handleLogin, handleLogout, verificarSesion } from "./auth.js";
 import { handleBuscarMedicamentos, handleInfoMedicamento } from "./cima.js";
 import { getMedicamentos, handlePostMedicamentos, handleGetHistorico } from "./medicamentos.js";
+import { handleGetFichaEmergencia, handlePostFichaEmergencia } from "./emergencia.js";
 
 export default {
   async fetch(request, env) {
@@ -48,6 +49,14 @@ export default {
 
       if (url.pathname === "/historico" && request.method === "GET") {
         return await handleGetHistorico(env, usuarioId);
+      }
+
+      if (url.pathname === "/ficha-emergencia" && request.method === "GET") {
+        return await handleGetFichaEmergencia(env, usuarioId);
+      }
+
+      if (url.pathname === "/ficha-emergencia" && request.method === "POST") {
+        return await handlePostFichaEmergencia(request, env, usuarioId);
       }
 
       return json({ error: "Ruta no encontrada" }, 404);
