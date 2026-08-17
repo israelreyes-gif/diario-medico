@@ -1,4 +1,75 @@
-// Ficha de emergencia: grupo sanguíneo, alergias, enfermedades, contactos personales y médicos
+// Ficha de emergencia: montaje de la pantalla, grupo sanguíneo, alergias, enfermedades y contactos
+
+function initEmergencyScreen() {
+  const el = document.getElementById('emergencyScreen');
+  el.innerHTML = `
+    <header>
+      <div class="brand">
+        <button class="back-btn" onclick="goHome()" aria-label="Volver al inicio">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="app-icon-sm emergency">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <h1>Ficha de emergencia</h1>
+      </div>
+    </header>
+
+    <div class="list" style="padding-bottom:40px;">
+
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5c0 4 5 11 5 11s5-7 5-11a5 5 0 0 0-5-5Z"/></svg>
+        Grupo sanguíneo
+      </div>
+      <div class="blood-grid">
+        <div class="blood-chip" data-grupo="O+" onclick="selectBloodGroup('O+')">O+</div>
+        <div class="blood-chip" data-grupo="O-" onclick="selectBloodGroup('O-')">O−</div>
+        <div class="blood-chip" data-grupo="A+" onclick="selectBloodGroup('A+')">A+</div>
+        <div class="blood-chip" data-grupo="A-" onclick="selectBloodGroup('A-')">A−</div>
+        <div class="blood-chip" data-grupo="B+" onclick="selectBloodGroup('B+')">B+</div>
+        <div class="blood-chip" data-grupo="B-" onclick="selectBloodGroup('B-')">B−</div>
+        <div class="blood-chip" data-grupo="AB+" onclick="selectBloodGroup('AB+')">AB+</div>
+        <div class="blood-chip" data-grupo="AB-" onclick="selectBloodGroup('AB-')">AB−</div>
+      </div>
+
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5-.35.35a2.5 2.5 0 0 1-3.54 0l-.46-.46a2.5 2.5 0 0 1 0-3.54L9 13"/><path d="M3.5 13.5 13.5 3.5a3 3 0 1 1 4 4l-1 1"/><path d="m14 15 4-4"/><path d="M17.5 17.5 22 22"/></svg>
+        Alergias
+      </div>
+      <div class="tag-input-row">
+        <input type="text" id="allergyInput" placeholder="Ej. Penicilina, frutos secos..." onkeydown="if(event.key==='Enter')addAllergyInput()">
+        <button class="tag-add-btn" onclick="addAllergyInput()">+</button>
+      </div>
+      <div class="tag-list" id="allergyList"></div>
+
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Enfermedades
+      </div>
+      <div class="tag-input-row">
+        <input type="text" id="diseaseInput" placeholder="Ej. Epilepsia, hipertensión..." onkeydown="if(event.key==='Enter')addDiseaseInput()">
+        <button class="tag-add-btn" onclick="addDiseaseInput()">+</button>
+      </div>
+      <div class="tag-list" id="diseaseList"></div>
+
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Contactos personales
+      </div>
+      <div id="personalContactsList"></div>
+      <button class="add-contact-btn" onclick="addContactoPersonal()">+ Añadir contacto</button>
+
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>
+        Contactos médicos
+      </div>
+      <div id="medicalContactsList"></div>
+      <button class="add-contact-btn" onclick="addContactoMedico()">+ Añadir contacto médico</button>
+
+      <button class="save-btn" id="saveEmergenciaBtn" onclick="saveEmergencia()">Guardar ficha de emergencia</button>
+    </div>
+  `;
+}
 
 let emergencia = { grupoSanguineo: null, alergias: [], enfermedades: [], contactosPersonales: [], contactosMedicos: [] };
 
@@ -91,8 +162,6 @@ function removeDisease(i) {
   renderDiseaseList();
 }
 
-// ---------- Contactos (personales y médicos comparten la misma lógica) ----------
-
 function renderContactList(campo, elementId, esMedico = false) {
   const el = document.getElementById(elementId);
   const lista = emergencia[campo];
@@ -156,8 +225,6 @@ function removeContacto(campo, i) {
 function updateContacto(campo, i, subcampo, valor) {
   emergencia[campo][i][subcampo] = valor;
 }
-
-// ---------- Guardar ----------
 
 async function saveEmergencia() {
   const btn = document.getElementById('saveEmergenciaBtn');
