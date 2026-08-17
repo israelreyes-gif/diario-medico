@@ -44,8 +44,8 @@ header{
 .header-actions{ display:flex; gap:8px; }
 
 .back-btn{
-  width:34px; height:34px; border-radius:50%; border:none; background:var(--paper);
-  border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:var(--paper);
+  display:flex; align-items:center; justify-content:center;
   cursor:pointer; flex-shrink:0; padding:0;
 }
 .back-btn:active{ transform:scale(0.94); }
@@ -81,12 +81,6 @@ header{
 .history-btn:active{ transform:scale(0.94); }
 .history-btn svg{ width:20px; height:20px; stroke:var(--teal-deep); }
 
-.section-eyebrow{
-  padding:8px 20px 6px;
-  flex-shrink:0;
-}
-.section-eyebrow .count{ font-size:12.5px; color:var(--ink-soft); }
-
 .swipe-hint{
   margin:0; padding:0 20px 14px; font-size:11.5px; color:var(--ink-soft); font-style:italic;
   flex-shrink:0;
@@ -116,7 +110,14 @@ header{
   position:relative; touch-action:pan-y;
   transition:transform 0.2s ease;
 }
-.med-top{ display:flex; justify-content:space-between; align-items:flex-start; }
+.med-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+.med-top-left{ display:flex; gap:10px; align-items:flex-start; min-width:0; }
+.med-icon{
+  width:34px; height:34px; border-radius:10px; flex-shrink:0; margin-top:1px;
+  background:linear-gradient(155deg, var(--teal) 0%, var(--teal-deep) 100%);
+  display:flex; align-items:center; justify-content:center;
+}
+.med-icon svg{ width:17px; height:17px; stroke:white; }
 .med-name{ font-family:'Fraunces', serif; font-size:17px; font-weight:600; }
 .med-meta{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
 .med-actions{ display:flex; gap:6px; flex-shrink:0; }
