@@ -1,0 +1,12 @@
+.snap-card{ border:1px solid var(--line); border-radius:16px; padding:14px 15px; margin-bottom:12px; background:var(--cream); }
+.snap-card.current{ background:#EAF2EE; border-color:var(--sage); }
+.snap-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.snap-title{ font-family:'Fraunces', serif; font-weight:600; font-size:14.5px; }
+.snap-badge{ font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; background:var(--teal-deep); color:white; }
+.snap-badge.past{ background:var(--ink-soft); }
+.snap-med{ display:flex; justify-content:space-between; font-size:13px; padding:5px 0; border-bottom:1px dashed var(--line); }
+.snap-med:last-child{ border-bottom:none; }
+.snap-med .n{ font-weight:500; }
+.snap-med .d{ color:var(--ink-soft); font-size:12px; text-align:right; }
+.snap-med.changed .n{ color:var(--noon); font-weight:600; }
+.snap-empty{ font-size:12.5px; color:var(--ink-soft); font-style:italic; padding:4px 0; }
