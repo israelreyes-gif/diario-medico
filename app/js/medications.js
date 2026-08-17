@@ -1,4 +1,4 @@
-// Pastillero: montaje de la pantalla, listado, autocompletado, añadir/editar/eliminar medicamentos
+// Medicación: montaje de la pantalla, listado, autocompletado, añadir/editar/eliminar medicamentos
 
 function initMedsScreen() {
   const el = document.getElementById('medsScreen');
@@ -11,7 +11,7 @@ function initMedsScreen() {
         <div class="app-icon-sm meds">
           <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
         </div>
-        <h1>Pastillero</h1>
+        <h1>Medicación</h1>
       </div>
       <div class="header-actions">
         <button class="history-btn" onclick="toggleHistory(true)" aria-label="Ver histórico">
