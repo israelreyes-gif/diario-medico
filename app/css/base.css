@@ -61,10 +61,11 @@ header{
 
 .app-icon-sm{
   width:32px; height:32px; border-radius:10px; flex-shrink:0;
-  background:linear-gradient(155deg, var(--teal) 0%, var(--teal-deep) 100%);
   display:flex; align-items:center; justify-content:center;
 }
 .app-icon-sm svg{ width:17px; height:17px; }
+.app-icon-sm.meds{ background:linear-gradient(155deg, var(--dawn) 0%, #B9832E 100%); }
+.app-icon-sm.emergency{ background:linear-gradient(155deg, #C9615B 0%, var(--danger) 100%); }
 
 .brand h1{
   font-family:'Fraunces', serif; font-weight:600; font-size:20px;
