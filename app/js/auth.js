@@ -1,4 +1,4 @@
-// Login, registro, y cambio entre las dos pantallas (acceso / app)
+// Login, registro, y cambio entre acceso / inicio
 
 function toggleAuthMode() {
   authMode = authMode === 'login' ? 'register' : 'login';
@@ -92,14 +92,17 @@ async function logout() {
 
 function mostrarAuth() {
   document.getElementById('authScreen').style.display = 'flex';
-  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('homeScreen').style.display = 'none';
+  document.getElementById('medsScreen').style.display = 'none';
+  document.getElementById('emergencyScreen').style.display = 'none';
   document.getElementById('authUser').value = '';
   document.getElementById('authPassword').value = '';
 }
 
 function mostrarApp() {
   document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('appScreen').style.display = 'flex';
-  document.getElementById('userLabel').textContent = getNombreCompleto() || getUsuario();
-  loadMedicamentos();
+  document.getElementById('medsScreen').style.display = 'none';
+  document.getElementById('emergencyScreen').style.display = 'none';
+  document.getElementById('homeScreen').style.display = 'flex';
+  document.getElementById('homeUserLabel').textContent = getNombreCompleto() || getUsuario();
 }
