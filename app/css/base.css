@@ -40,8 +40,17 @@ header{
   display:flex; align-items:center; justify-content:space-between;
   flex-shrink:0;
 }
-.brand{ display:flex; align-items:center; gap:12px; }
+.brand{ display:flex; align-items:center; gap:10px; }
 .header-actions{ display:flex; gap:8px; }
+
+.back-btn{
+  width:34px; height:34px; border-radius:50%; border:none; background:var(--paper);
+  border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; flex-shrink:0; padding:0;
+}
+.back-btn:active{ transform:scale(0.94); }
+.back-btn svg{ width:17px; height:17px; stroke:var(--teal-deep); }
+
 .app-icon{
   width:44px; height:44px; border-radius:12px;
   background:linear-gradient(155deg, var(--teal) 0%, var(--teal-deep) 100%);
@@ -49,8 +58,16 @@ header{
   box-shadow:0 4px 14px rgba(30,71,68,0.28);
 }
 .app-icon svg{ width:24px; height:24px; }
+
+.app-icon-sm{
+  width:32px; height:32px; border-radius:10px; flex-shrink:0;
+  background:linear-gradient(155deg, var(--teal) 0%, var(--teal-deep) 100%);
+  display:flex; align-items:center; justify-content:center;
+}
+.app-icon-sm svg{ width:17px; height:17px; }
+
 .brand h1{
-  font-family:'Fraunces', serif; font-weight:600; font-size:19px;
+  font-family:'Fraunces', serif; font-weight:600; font-size:20px;
   margin:0; letter-spacing:-0.01em;
 }
 .brand span{ display:block; font-size:11.5px; color:var(--ink-soft); margin-top:1px; }
