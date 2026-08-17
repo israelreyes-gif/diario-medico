@@ -17,13 +17,17 @@
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html, body{
-  height:100%; margin:0; overflow:hidden;
+  height:100%; margin:0; overflow:hidden; overscroll-behavior:none;
   background:var(--cream); color:var(--ink);
   font-family:'Work Sans', sans-serif;
 }
-body{ display:flex; justify-content:center; }
+body{
+  position:fixed; inset:0;
+  display:flex; justify-content:center;
+  overflow:hidden;
+}
 .device{
-  width:100%; max-width:430px; height:100vh; height:100dvh;
+  width:100%; max-width:430px; height:100%;
   background:var(--cream);
   display:flex; flex-direction:column;
   padding-top:env(safe-area-inset-top);
