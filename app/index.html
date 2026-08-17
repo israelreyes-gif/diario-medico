@@ -11,8 +11,10 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/auth.css">
+<link rel="stylesheet" href="css/home.css">
 <link rel="stylesheet" href="css/sheets.css">
 <link rel="stylesheet" href="css/history.css">
+<link rel="stylesheet" href="css/emergency.css">
 <title>Diario médico</title>
 </head>
 <body>
@@ -57,10 +59,9 @@
   </div>
 </div>
 
-<!-- APP SCREEN -->
-<div class="device" id="appScreen" style="display:none;">
-
-  <header>
+<!-- HOME SCREEN -->
+<div class="device" id="homeScreen" style="display:none;">
+  <header class="home-header">
     <div class="brand">
       <div class="app-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -70,19 +71,68 @@
       </div>
       <div>
         <h1>Diario médico</h1>
-        <span id="userLabel">Medicación de hoy</span>
+        <span id="homeUserLabel">&nbsp;</span>
+      </div>
+    </div>
+    <button class="history-btn" onclick="logout()" aria-label="Cerrar sesión">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
+      </svg>
+    </button>
+  </header>
+
+  <div class="home-cards">
+    <div class="home-card" onclick="goToMeds()">
+      <div class="home-card-icon meds">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l.5.5.5-.5a5 5 0 0 1 7 7l-3 3"/><path d="M14 15l2 2 4-4"/></svg>
+      </div>
+      <div class="home-card-text">
+        <h3>Pastillero</h3>
+        <p>Medicación, dosis e histórico</p>
+      </div>
+      <div class="home-card-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+
+    <div class="home-card" onclick="goToEmergencia()">
+      <div class="home-card-icon emergency">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </div>
+      <div class="home-card-text">
+        <h3>Ficha de emergencia</h3>
+        <p>Grupo sanguíneo, alergias y contactos</p>
+      </div>
+      <div class="home-card-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MEDS SCREEN -->
+<div class="device" id="medsScreen" style="display:none;">
+
+  <header>
+    <div class="brand">
+      <button class="app-icon-btn" onclick="goHome()" aria-label="Volver al inicio">
+        <div class="app-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l.5.5.5-.5a5 5 0 0 1 7 7l-3 3"/>
+            <path d="M14 15l2 2 4-4"/>
+          </svg>
+        </div>
+      </button>
+      <div>
+        <h1>Diario médico</h1>
+        <span>Pastillero</span>
       </div>
     </div>
     <div class="header-actions">
       <button class="history-btn" onclick="toggleHistory(true)" aria-label="Ver histórico">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>
-        </svg>
-      </button>
-      <button class="history-btn" onclick="logout()" aria-label="Cerrar sesión">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
         </svg>
       </button>
     </div>
@@ -100,6 +150,75 @@
   <button class="fab" onclick="openForm()" aria-label="Añadir medicación">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
   </button>
+</div>
+
+<!-- EMERGENCY SCREEN -->
+<div class="device" id="emergencyScreen" style="display:none;">
+
+  <header>
+    <div class="brand">
+      <button class="app-icon-btn" onclick="goHome()" aria-label="Volver al inicio">
+        <div class="app-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l.5.5.5-.5a5 5 0 0 1 7 7l-3 3"/>
+            <path d="M14 15l2 2 4-4"/>
+          </svg>
+        </div>
+      </button>
+      <div>
+        <h1>Diario médico</h1>
+        <span>Ficha de emergencia</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="list" style="padding-bottom:40px;">
+
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5c0 4 5 11 5 11s5-7 5-11a5 5 0 0 0-5-5Z"/></svg>
+      Grupo sanguíneo
+    </div>
+    <div class="blood-grid">
+      <div class="blood-chip" data-grupo="O+" onclick="selectBloodGroup('O+')">O+</div>
+      <div class="blood-chip" data-grupo="O-" onclick="selectBloodGroup('O-')">O−</div>
+      <div class="blood-chip" data-grupo="A+" onclick="selectBloodGroup('A+')">A+</div>
+      <div class="blood-chip" data-grupo="A-" onclick="selectBloodGroup('A-')">A−</div>
+      <div class="blood-chip" data-grupo="B+" onclick="selectBloodGroup('B+')">B+</div>
+      <div class="blood-chip" data-grupo="B-" onclick="selectBloodGroup('B-')">B−</div>
+      <div class="blood-chip" data-grupo="AB+" onclick="selectBloodGroup('AB+')">AB+</div>
+      <div class="blood-chip" data-grupo="AB-" onclick="selectBloodGroup('AB-')">AB−</div>
+    </div>
+
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5-.35.35a2.5 2.5 0 0 1-3.54 0l-.46-.46a2.5 2.5 0 0 1 0-3.54L9 13"/><path d="M3.5 13.5 13.5 3.5a3 3 0 1 1 4 4l-1 1"/><path d="m14 15 4-4"/><path d="M17.5 17.5 22 22"/></svg>
+      Alergias
+    </div>
+    <div class="tag-input-row">
+      <input type="text" id="allergyInput" placeholder="Ej. Penicilina, frutos secos..." onkeydown="if(event.key==='Enter')addAllergyInput()">
+      <button class="tag-add-btn" onclick="addAllergyInput()">+</button>
+    </div>
+    <div class="tag-list" id="allergyList"></div>
+
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Enfermedades
+    </div>
+    <div class="tag-input-row">
+      <input type="text" id="diseaseInput" placeholder="Ej. Epilepsia, hipertensión..." onkeydown="if(event.key==='Enter')addDiseaseInput()">
+      <button class="tag-add-btn" onclick="addDiseaseInput()">+</button>
+    </div>
+    <div class="tag-list" id="diseaseList"></div>
+
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      Contactos de emergencia
+    </div>
+    <div id="contactsList"></div>
+    <button class="add-contact-btn" id="addContactBtn" onclick="addContacto()">+ Añadir contacto</button>
+
+    <button class="save-btn" id="saveEmergenciaBtn" onclick="saveEmergencia()">Guardar ficha de emergencia</button>
+    <p class="save-hint">Máximo 2 contactos de emergencia</p>
+  </div>
 </div>
 
 <!-- FORM SHEET -->
@@ -196,6 +315,8 @@
 <script src="js/medications.js"></script>
 <script src="js/history.js"></script>
 <script src="js/info.js"></script>
+<script src="js/emergency.js"></script>
+<script src="js/navigation.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
