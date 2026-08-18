@@ -8,6 +8,7 @@ renderHomeCards();
 document.getElementById('formOverlay').addEventListener('click', e => { if (e.target.id === 'formOverlay') closeForm(); });
 document.getElementById('historyOverlay').addEventListener('click', e => { if (e.target.id === 'historyOverlay') toggleHistory(false); });
 document.getElementById('infoOverlay').addEventListener('click', e => { if (e.target.id === 'infoOverlay') toggleInfo(false); });
+document.getElementById('moodSummaryOverlay').addEventListener('click', e => { if (e.target.id === 'moodSummaryOverlay') toggleMoodSummary(false); });
 
 initAutocomplete();
 
