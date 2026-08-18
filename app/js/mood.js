@@ -1,4 +1,4 @@
-// Estado de ánimo: montaje de la pantalla, franjas del día, calendario mensual, resúmenes semanal y mensual
+// Estado de ánimo: montaje de la pantalla, franjas del día, calendario mensual, resúmenes semanal, mensual y anual
 
 const MOOD_EMOTIONS = [
   { id: 'alegria', emo: '😄', label: 'Alegría' },
@@ -23,7 +23,7 @@ let moodCalYear = new Date().getFullYear();
 let moodCalMonth = new Date().getMonth() + 1; // 1-12
 let moodCalData = [];
 
-let moodSummaryType = 'month'; // 'week' | 'month'
+let moodSummaryType = 'month'; // 'week' | 'month' | 'year'
 let moodSummaryDate = new Date();
 
 function initMoodScreen() {
@@ -85,7 +85,7 @@ function initMoodScreen() {
         </div>
       </div>
 
-      <div class="mood-summary-card" style="margin-top:10px;" onclick="alert('Resumen anual — todavía sin funcionalidad')">
+      <div class="mood-summary-card" style="margin-top:10px;" onclick="openMoodSummary('year')">
         <div class="mood-summary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg></div>
         <h4>Resumen anual</h4>
         <p>Evolución de todo el año</p>
@@ -299,7 +299,7 @@ function renderMoodCalendar(year, mes) {
   document.getElementById('moodCalGrid').innerHTML = html;
 }
 
-// ---------- Resúmenes (semanal / mensual) ----------
+// ---------- Resúmenes (semanal / mensual / anual) ----------
 
 function openMoodSummary(type) {
   moodSummaryType = type;
@@ -316,8 +316,10 @@ function moodSummaryChangePeriod(delta) {
   const d = new Date(moodSummaryDate);
   if (moodSummaryType === 'week') {
     d.setDate(d.getDate() + delta * 7);
-  } else {
+  } else if (moodSummaryType === 'month') {
     d.setMonth(d.getMonth() + delta);
+  } else {
+    d.setFullYear(d.getFullYear() + delta);
   }
   moodSummaryDate = d;
   loadMoodSummary();
@@ -339,6 +341,15 @@ function getMoodSummaryRange() {
     return { inicio: toISO(monday), fin: toISO(sunday), totalDias: 7, label };
   }
 
+  if (moodSummaryType === 'year') {
+    const year = moodSummaryDate.getFullYear();
+    const primerDia = new Date(year, 0, 1);
+    const ultimoDia = new Date(year, 11, 31);
+    const totalDias = Math.round((ultimoDia - primerDia) / (1000 * 60 * 60 * 24)) + 1;
+
+    return { inicio: toISO(primerDia), fin: toISO(ultimoDia), totalDias, label: String(year) };
+  }
+
   const year = moodSummaryDate.getFullYear();
   const mes = moodSummaryDate.getMonth();
   const primerDia = new Date(year, mes, 1);
@@ -351,7 +362,8 @@ function getMoodSummaryRange() {
 
 async function loadMoodSummary() {
   const range = getMoodSummaryRange();
-  document.getElementById('moodSummaryTitle').textContent = moodSummaryType === 'week' ? 'Resumen semanal' : 'Resumen mensual';
+  const titulos = { week: 'Resumen semanal', month: 'Resumen mensual', year: 'Resumen anual' };
+  document.getElementById('moodSummaryTitle').textContent = titulos[moodSummaryType];
   const content = document.getElementById('moodSummaryContent');
   content.innerHTML = 'Cargando...';
 
@@ -438,24 +450,48 @@ function renderMoodSummary(range, dias) {
   });
   if (currentSeg.length) segments.push(currentSeg);
 
+  // En el anual hay muchos puntos (365) — usar líneas más finas y sin círculo en cada uno,
+  // solo marcar el punto más alto y el más bajo del año para no saturar el gráfico.
+  const strokeWidth = moodSummaryType === 'year' ? 1.6 : 2.5;
   const polylines = segments
-    .map(seg => `<polyline fill="none" stroke="#6B5B95" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="${seg.join(' ')}"/>`)
+    .map(seg => `<polyline fill="none" stroke="#6B5B95" stroke-width="${strokeWidth}" stroke-linejoin="round" stroke-linecap="round" points="${seg.join(' ')}"/>`)
     .join('');
 
-  const circles = puntos
-    .map((p, i) => {
-      if (p.avg === null) return '';
-      const x = i * xStep;
-      const y = scaleY(p.avg);
-      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${colorPorDistanciaAlCentro(p.avg)}"/>`;
-    })
-    .join('');
+  let circles;
+  if (moodSummaryType === 'year') {
+    let idxMax = -1, idxMin = -1;
+    puntos.forEach((p, i) => {
+      if (p.avg === null) return;
+      if (idxMax === -1 || p.avg > puntos[idxMax].avg) idxMax = i;
+      if (idxMin === -1 || p.avg < puntos[idxMin].avg) idxMin = i;
+    });
+    circles = [idxMax, idxMin]
+      .filter(i => i !== -1)
+      .map(i => {
+        const x = i * xStep;
+        const y = scaleY(puntos[i].avg);
+        return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${colorPorDistanciaAlCentro(puntos[i].avg)}"/>`;
+      })
+      .join('');
+  } else {
+    circles = puntos
+      .map((p, i) => {
+        if (p.avg === null) return '';
+        const x = i * xStep;
+        const y = scaleY(p.avg);
+        return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${colorPorDistanciaAlCentro(p.avg)}"/>`;
+      })
+      .join('');
+  }
 
   let xLabelsHtml;
   if (moodSummaryType === 'week') {
     xLabelsHtml = puntos
       .map(p => `<span>${new Date(p.fecha + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'short' }).charAt(0).toUpperCase()}</span>`)
       .join('');
+  } else if (moodSummaryType === 'year') {
+    const meses = ['E','F','M','A','M','J','J','A','S','O','N','D'];
+    xLabelsHtml = meses.map(m => `<span>${m}</span>`).join('');
   } else {
     const idxs = new Set([0, Math.floor((n - 1) / 3), Math.floor(((n - 1) * 2) / 3), n - 1]);
     xLabelsHtml = puntos
