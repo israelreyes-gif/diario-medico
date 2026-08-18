@@ -2,8 +2,8 @@ import { json } from "./utils.js";
 
 const FRANJAS = ["manana", "tarde", "noche"];
 const EMOCIONES_VALIDAS = [
-  "contenta", "tranquila", "ilusionada", "cansada",
-  "triste", "enfadada", "agobiada", "ansiosa",
+  "alegria", "calma", "ilusion", "cansancio",
+  "tristeza", "enfado", "agobio", "ansiedad",
 ];
 
 // A partir de la hora local del dispositivo (0-23), calcula qué franja debería estar activa.
@@ -76,7 +76,6 @@ export async function handlePostEstadoAnimo(request, env, usuarioId) {
 
   const valorJson = JSON.stringify({ emocion, intensidad });
 
-  // Como cada franja es su propia columna, actualizamos solo esa, sin tocar las otras dos.
   const columnasPermitidas = { manana: "manana", tarde: "tarde", noche: "noche" };
   const columna = columnasPermitidas[franja];
 
