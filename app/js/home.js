@@ -4,6 +4,13 @@
 
 const HOME_SECTIONS = [
   {
+    className: 'mood',
+    title: 'Estado de ánimo',
+    subtitle: 'Registro diario y calendario',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>',
+    onClick: 'goToMood()',
+  },
+  {
     className: 'meds',
     title: 'Medicación',
     subtitle: 'Medicación, dosis e histórico',
