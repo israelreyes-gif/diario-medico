@@ -20,6 +20,7 @@
   display:flex; align-items:center; justify-content:center;
 }
 .home-card-icon svg{ width:26px; height:26px; stroke:white; }
+.home-card-icon.mood{ background:linear-gradient(155deg, var(--dusk) 0%, var(--dusk-deep) 100%); }
 .home-card-icon.meds{ background:linear-gradient(155deg, var(--dawn) 0%, #B9832E 100%); }
 .home-card-icon.emergency{ background:linear-gradient(155deg, #C9615B 0%, var(--danger) 100%); }
 .home-card-text{ flex:1; }
