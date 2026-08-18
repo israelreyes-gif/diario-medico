@@ -1,14 +1,14 @@
 // Estado de ánimo: montaje de la pantalla, franjas del día, calendario mensual
 
 const MOOD_EMOTIONS = [
-  { id: 'contenta', emo: '😄', label: 'Contenta' },
-  { id: 'tranquila', emo: '😌', label: 'Tranquila' },
-  { id: 'ilusionada', emo: '🤩', label: 'Ilusionada' },
-  { id: 'cansada', emo: '🥱', label: 'Cansada' },
-  { id: 'triste', emo: '😢', label: 'Triste' },
-  { id: 'enfadada', emo: '😠', label: 'Enfadada' },
-  { id: 'agobiada', emo: '😖', label: 'Agobiada' },
-  { id: 'ansiosa', emo: '😟', label: 'Ansiosa' },
+  { id: 'alegria', emo: '😄', label: 'Alegría' },
+  { id: 'calma', emo: '😌', label: 'Calma' },
+  { id: 'ilusion', emo: '🤩', label: 'Ilusión' },
+  { id: 'cansancio', emo: '🥱', label: 'Cansancio' },
+  { id: 'tristeza', emo: '😢', label: 'Tristeza' },
+  { id: 'enfado', emo: '😠', label: 'Enfado' },
+  { id: 'agobio', emo: '😖', label: 'Agobio' },
+  { id: 'ansiedad', emo: '😟', label: 'Ansiedad' },
 ];
 
 const MOOD_SLOTS = [
