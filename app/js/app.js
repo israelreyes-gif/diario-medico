@@ -1,5 +1,6 @@
 // Arranque de la app: monta cada pantalla, engancha los cierres de hojas y comprueba la sesión
 
+initMoodScreen();
 initMedsScreen();
 initEmergencyScreen();
 renderHomeCards();
