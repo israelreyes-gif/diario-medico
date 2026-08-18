@@ -6,9 +6,6 @@ const EMOCIONES_VALIDAS = [
   "tristeza", "enfado", "agobio", "ansiedad",
 ];
 
-// A partir de la hora local del dispositivo (0-23), calcula qué franja debería estar activa.
-// Esto se usa para impedir, desde el propio servidor, que se guarde una franja fuera de su horario
-// (5-13 mañana, 13-20 tarde, 20-5 noche), aunque alguien intente llamar a la API directamente.
 function franjaSegunHora(hora) {
   if (hora >= 5 && hora < 13) return "manana";
   if (hora >= 13 && hora < 20) return "tarde";
@@ -75,7 +72,6 @@ export async function handlePostEstadoAnimo(request, env, usuarioId) {
   }
 
   const valorJson = JSON.stringify({ emocion, intensidad });
-
   const columnasPermitidas = { manana: "manana", tarde: "tarde", noche: "noche" };
   const columna = columnasPermitidas[franja];
 
@@ -107,6 +103,41 @@ export async function handleGetEstadoMes(request, env, usuarioId) {
     "SELECT fecha, manana, tarde, noche FROM estados_animo WHERE usuario_id = ? AND fecha LIKE ? ORDER BY fecha ASC"
   )
     .bind(usuarioId, `${prefijo}%`)
+    .all();
+
+  const dias = results.map((f) => ({
+    fecha: f.fecha,
+    manana: f.manana ? JSON.parse(f.manana) : null,
+    tarde: f.tarde ? JSON.parse(f.tarde) : null,
+    noche: f.noche ? JSON.parse(f.noche) : null,
+  }));
+
+  return json({ dias });
+}
+
+// Endpoint genérico por rango de fechas, usado por los resúmenes (semanal y mensual),
+// ya que una semana puede cruzar dos meses distintos y así no hace falta combinar llamadas.
+export async function handleGetEstadoRango(request, env, usuarioId) {
+  const url = new URL(request.url);
+  const inicio = url.searchParams.get("inicio");
+  const fin = url.searchParams.get("fin");
+
+  if (!inicio || !fin || !/^\d{4}-\d{2}-\d{2}$/.test(inicio) || !/^\d{4}-\d{2}-\d{2}$/.test(fin)) {
+    return json({ error: "Parámetros inicio/fin no válidos, se espera YYYY-MM-DD." }, 400);
+  }
+  if (inicio > fin) {
+    return json({ error: "La fecha de inicio debe ser anterior a la de fin." }, 400);
+  }
+
+  const diasDiferencia = (new Date(fin) - new Date(inicio)) / (1000 * 60 * 60 * 24);
+  if (diasDiferencia > 370) {
+    return json({ error: "El rango de fechas es demasiado amplio." }, 400);
+  }
+
+  const { results } = await env.DB.prepare(
+    "SELECT fecha, manana, tarde, noche FROM estados_animo WHERE usuario_id = ? AND fecha BETWEEN ? AND ? ORDER BY fecha ASC"
+  )
+    .bind(usuarioId, inicio, fin)
     .all();
 
   const dias = results.map((f) => ({
