@@ -3,6 +3,7 @@ import { handleRegister, handleLogin, handleLogout, verificarSesion } from "./au
 import { handleBuscarMedicamentos, handleInfoMedicamento } from "./cima.js";
 import { getMedicamentos, handlePostMedicamentos, handleGetHistorico } from "./medicamentos.js";
 import { handleGetFichaEmergencia, handlePostFichaEmergencia } from "./emergencia.js";
+import { handleGetEstadoDia, handlePostEstadoAnimo, handleGetEstadoMes } from "./mood.js";
 
 export default {
   async fetch(request, env) {
@@ -57,6 +58,18 @@ export default {
 
       if (url.pathname === "/ficha-emergencia" && request.method === "POST") {
         return await handlePostFichaEmergencia(request, env, usuarioId);
+      }
+
+      if (url.pathname === "/estado-animo" && request.method === "GET") {
+        return await handleGetEstadoDia(request, env, usuarioId);
+      }
+
+      if (url.pathname === "/estado-animo" && request.method === "POST") {
+        return await handlePostEstadoAnimo(request, env, usuarioId);
+      }
+
+      if (url.pathname === "/estado-animo-mes" && request.method === "GET") {
+        return await handleGetEstadoMes(request, env, usuarioId);
       }
 
       return json({ error: "Ruta no encontrada" }, 404);
