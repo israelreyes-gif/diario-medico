@@ -11,8 +11,14 @@
   --dawn:#D9A441;
   --noon:#C97B63;
   --dusk:#6B5B95;
+  --dusk-deep:#4A3D6B;
   --line:#E8E1D3;
   --danger:#B23B3B;
+  --mood1:#B23B3B;
+  --mood2:#D9A441;
+  --mood3:#C9C0A8;
+  --mood4:#8FB08A;
+  --mood5:#4F8F6E;
   --radius:20px;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -66,6 +72,7 @@ header{
 .app-icon-sm svg{ width:17px; height:17px; }
 .app-icon-sm.meds{ background:linear-gradient(155deg, var(--dawn) 0%, #B9832E 100%); }
 .app-icon-sm.emergency{ background:linear-gradient(155deg, #C9615B 0%, var(--danger) 100%); }
+.app-icon-sm.mood{ background:linear-gradient(155deg, var(--dusk) 0%, var(--dusk-deep) 100%); }
 
 .brand h1{
   font-family:'Fraunces', serif; font-weight:600; font-size:20px;
