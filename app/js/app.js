@@ -12,6 +12,22 @@ document.getElementById('moodSummaryOverlay').addEventListener('click', e => { i
 
 initAutocomplete();
 
+// Bloquea el pellizco para hacer zoom en toda la app. iOS a veces ignora el "user-scalable=no"
+// del viewport por accesibilidad, así que hay que interceptar el gesto directamente.
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('gesturechange', e => e.preventDefault());
+document.addEventListener('touchmove', e => {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
+// También bloquea el "doble toque para hacer zoom"
+let ultimoToque = 0;
+document.addEventListener('touchend', e => {
+  const ahora = Date.now();
+  if (ahora - ultimoToque <= 300) e.preventDefault();
+  ultimoToque = ahora;
+}, { passive: false });
+
 if (getToken()) {
   mostrarApp();
 } else {
