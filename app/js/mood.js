@@ -54,14 +54,14 @@ function initMoodScreen() {
           <p>Evolución de esta semana</p>
         </div>
         <div class="mood-summary-card" onclick="openMoodSummary('month')">
-          <div class="mood-summary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg></div>
+          <div class="mood-summary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M4 10h16"/><circle cx="12" cy="15" r="2"/></svg></div>
           <h4>Resumen mensual</h4>
           <p>Evolución de este mes</p>
         </div>
       </div>
 
       <div class="mood-summary-card" style="margin-top:10px;" onclick="openMoodSummary('year')">
-        <div class="mood-summary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg></div>
+        <div class="mood-summary-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="14" height="14" rx="2"/><path d="M7 5V3"/><path d="M13 5V3"/><path d="M7 11h6"/><rect x="7" y="3" width="14" height="14" rx="2" opacity="0.55"/></svg></div>
         <h4>Resumen anual</h4>
         <p>Evolución de todo el año</p>
       </div>
