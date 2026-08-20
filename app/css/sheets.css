@@ -8,6 +8,8 @@
   width:100%; max-width:430px; background:var(--paper);
   border-radius:26px 26px 0 0; max-height:88vh;
   overflow-y:auto; overflow-x:hidden;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
   position:relative;
 }
 .sheet-handle{ width:36px; height:4px; border-radius:3px; background:var(--line); margin:8px auto 16px; }
