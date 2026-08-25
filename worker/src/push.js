@@ -1,170 +1,49 @@
-// Implementación mínima de Web Push (RFC 8291 + VAPID) usando solo Web Crypto,
-// disponible de forma nativa en Cloudflare Workers, sin depender de paquetes npm.
+import { json } from "./utils.js";
 
-function base64UrlToUint8Array(base64Url) {
-  const padding = "=".repeat((4 - (base64Url.length % 4)) % 4);
-  const base64 = (base64Url + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const raw = atob(base64);
-  const arr = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
-  return arr;
+export async function handleGetPushPublicKey(env) {
+  if (!env.VAPID_PUBLIC_KEY) {
+    return json({ error: "Las notificaciones no están configuradas todavía." }, 500);
+  }
+  return json({ publicKey: env.VAPID_PUBLIC_KEY });
 }
 
-function uint8ArrayToBase64Url(bytes) {
-  let binary = "";
-  bytes.forEach((b) => (binary += String.fromCharCode(b)));
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
+export async function handleSuscribirPush(request, env, usuarioId) {
+  const body = await request.json();
+  const { endpoint, keys } = body;
 
-// La clave pública VAPID viene en formato "punto sin comprimir": 1 byte (0x04) + X (32 bytes) + Y (32 bytes).
-// Para importar la privada como JWK, Web Crypto necesita también X e Y, así que los sacamos de aquí.
-function coordenadasXYDesdeClavePublica(publicKeyB64Url) {
-  const raw = base64UrlToUint8Array(publicKeyB64Url);
-  const x = raw.slice(1, 33);
-  const y = raw.slice(33, 65);
-  return { x: uint8ArrayToBase64Url(x), y: uint8ArrayToBase64Url(y) };
-}
-
-async function importVapidPrivateKey(privateKeyB64Url, publicKeyB64Url) {
-  const { x, y } = coordenadasXYDesdeClavePublica(publicKeyB64Url);
-
-  const jwk = {
-    kty: "EC",
-    crv: "P-256",
-    x,
-    y,
-    d: privateKeyB64Url,
-    ext: true,
-  };
-
-  return crypto.subtle.importKey(
-    "jwk",
-    jwk,
-    { name: "ECDSA", namedCurve: "P-256" },
-    false,
-    ["sign"]
-  );
-}
-
-async function crearVapidJWT(endpointOrigin, subject, publicKeyB64Url, privateKeyB64Url) {
-  const header = { typ: "JWT", alg: "ES256" };
-  const payload = {
-    aud: endpointOrigin,
-    exp: Math.floor(Date.now() / 1000) + 12 * 60 * 60,
-    sub: subject,
-  };
-
-  const encoder = new TextEncoder();
-  const headerB64 = uint8ArrayToBase64Url(encoder.encode(JSON.stringify(header)));
-  const payloadB64 = uint8ArrayToBase64Url(encoder.encode(JSON.stringify(payload)));
-  const unsigned = `${headerB64}.${payloadB64}`;
-
-  const key = await importVapidPrivateKey(privateKeyB64Url, publicKeyB64Url);
-  const signature = await crypto.subtle.sign(
-    { name: "ECDSA", hash: "SHA-256" },
-    key,
-    encoder.encode(unsigned)
-  );
-
-  const signatureB64 = uint8ArrayToBase64Url(new Uint8Array(signature));
-  return `${unsigned}.${signatureB64}`;
-}
-
-export async function enviarPush(suscripcion, payloadObjeto, env) {
-  const { endpoint, p256dh, auth } = suscripcion;
-  const url = new URL(endpoint);
-  const origin = `${url.protocol}//${url.host}`;
-
-  const jwt = await crearVapidJWT(origin, env.VAPID_SUBJECT, env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
-
-  const payloadTexto = JSON.stringify(payloadObjeto);
-  const payloadBytes = new TextEncoder().encode(payloadTexto);
-
-  const claveServidor = await crypto.subtle.generateKey(
-    { name: "ECDH", namedCurve: "P-256" },
-    true,
-    ["deriveBits"]
-  );
-  const claveServidorPublicaRaw = new Uint8Array(
-    await crypto.subtle.exportKey("raw", claveServidor.publicKey)
-  );
-
-  const claveClienteRaw = base64UrlToUint8Array(p256dh);
-  const authSecret = base64UrlToUint8Array(auth);
-
-  const claveClientePublica = await crypto.subtle.importKey(
-    "raw",
-    claveClienteRaw,
-    { name: "ECDH", namedCurve: "P-256" },
-    false,
-    []
-  );
-
-  const secretoCompartidoBits = await crypto.subtle.deriveBits(
-    { name: "ECDH", public: claveClientePublica },
-    claveServidor.privateKey,
-    256
-  );
-  const secretoCompartido = new Uint8Array(secretoCompartidoBits);
-
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-
-  async function hkdf(clave, salt, info, longitud) {
-    const claveBase = await crypto.subtle.importKey("raw", clave, "HKDF", false, ["deriveBits"]);
-    const bits = await crypto.subtle.deriveBits(
-      { name: "HKDF", hash: "SHA-256", salt, info },
-      claveBase,
-      longitud * 8
-    );
-    return new Uint8Array(bits);
+  if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+    return json({ error: "Suscripción no válida." }, 400);
   }
 
-  const encoder = new TextEncoder();
-  const infoAuth = concatUint8([
-    encoder.encode("WebPush: info\0"),
-    claveClienteRaw,
-    claveServidorPublicaRaw,
-  ]);
-  const prk = await hkdf(secretoCompartido, authSecret, infoAuth, 32);
+  const ahora = new Date().toISOString();
 
-  const cek = await hkdf(prk, salt, encoder.encode("Content-Encoding: aes128gcm\0"), 16);
-  const nonce = await hkdf(prk, salt, encoder.encode("Content-Encoding: nonce\0"), 12);
+  await env.DB.prepare(
+    `INSERT INTO suscripciones_push (usuario_id, endpoint, p256dh, auth, creado_en)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(endpoint) DO UPDATE SET
+       usuario_id = excluded.usuario_id,
+       p256dh = excluded.p256dh,
+       auth = excluded.auth`
+  )
+    .bind(usuarioId, endpoint, keys.p256dh, keys.auth, ahora)
+    .run();
 
-  const relleno = new Uint8Array([0]);
-  const contenidoConRelleno = concatUint8([payloadBytes, relleno]);
-
-  const claveAesGcm = await crypto.subtle.importKey("raw", cek, "AES-GCM", false, ["encrypt"]);
-  const cifrado = new Uint8Array(
-    await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, claveAesGcm, contenidoConRelleno)
-  );
-
-  const recordSize = new Uint8Array(4);
-  new DataView(recordSize.buffer).setUint32(0, cifrado.length + 16 + 86 - 16, false);
-  const keyIdLength = new Uint8Array([65]);
-  const header = concatUint8([salt, recordSize, keyIdLength, claveServidorPublicaRaw]);
-  const cuerpoFinal = concatUint8([header, cifrado]);
-
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      TTL: "86400",
-      "Content-Type": "application/octet-stream",
-      "Content-Encoding": "aes128gcm",
-      Authorization: `vapid t=${jwt}, k=${env.VAPID_PUBLIC_KEY}`,
-    },
-    body: cuerpoFinal,
-  });
-
-  return { ok: res.ok, status: res.status };
+  return json({ ok: true });
 }
 
-function concatUint8(arrays) {
-  const total = arrays.reduce((acc, a) => acc + a.length, 0);
-  const resultado = new Uint8Array(total);
-  let offset = 0;
-  for (const arr of arrays) {
-    resultado.set(arr, offset);
-    offset += arr.length;
+export async function handleDesuscribirPush(request, env, usuarioId) {
+  const body = await request.json();
+  const { endpoint } = body;
+
+  if (!endpoint) {
+    return json({ error: "Falta el endpoint a eliminar." }, 400);
   }
-  return resultado;
+
+  await env.DB.prepare(
+    "DELETE FROM suscripciones_push WHERE endpoint = ? AND usuario_id = ?"
+  )
+    .bind(endpoint, usuarioId)
+    .run();
+
+  return json({ ok: true });
 }
