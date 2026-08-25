@@ -1,6 +1,6 @@
 import { enviarPush } from "./webpush.js";
 
-const MENSAJES_FRANJA = {v
+const MENSAJES_FRANJA = {
   manana: { titulo: "☀️ Buenos días", cuerpo: "¿Cómo te sientes esta mañana? Toca para registrarlo." },
   tarde: { titulo: "🌤️ Buenas tardes", cuerpo: "¿Cómo va tu tarde? Toca para registrar tu estado." },
   noche: { titulo: "🌙 Buenas noches", cuerpo: "¿Cómo ha ido tu noche? Toca para registrarlo antes de dormir." },
