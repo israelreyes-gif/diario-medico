@@ -4,6 +4,7 @@ import { handleBuscarMedicamentos, handleInfoMedicamento } from "./cima.js";
 import { getMedicamentos, handlePostMedicamentos, handleGetHistorico } from "./medicamentos.js";
 import { handleGetFichaEmergencia, handlePostFichaEmergencia } from "./emergencia.js";
 import { handleGetEstadoDia, handlePostEstadoAnimo, handleGetEstadoMes, handleGetEstadoRango } from "./mood.js";
+import { handleGetPushPublicKey, handleSuscribirPush, handleDesuscribirPush } from "./push.js";
 
 export default {
   async fetch(request, env) {
@@ -32,6 +33,10 @@ export default {
 
       if (url.pathname === "/medicamento-info" && request.method === "GET") {
         return await handleInfoMedicamento(request);
+      }
+
+      if (url.pathname === "/push-public-key" && request.method === "GET") {
+        return await handleGetPushPublicKey(env);
       }
 
       const usuarioId = await verificarSesion(request, env);
@@ -74,6 +79,14 @@ export default {
 
       if (url.pathname === "/estado-animo-rango" && request.method === "GET") {
         return await handleGetEstadoRango(request, env, usuarioId);
+      }
+
+      if (url.pathname === "/push-suscribir" && request.method === "POST") {
+        return await handleSuscribirPush(request, env, usuarioId);
+      }
+
+      if (url.pathname === "/push-desuscribir" && request.method === "POST") {
+        return await handleDesuscribirPush(request, env, usuarioId);
       }
 
       return json({ error: "Ruta no encontrada" }, 404);
