@@ -5,7 +5,7 @@ import { getMedicamentos, handlePostMedicamentos, handleGetHistorico } from "./m
 import { handleGetFichaEmergencia, handlePostFichaEmergencia } from "./emergencia.js";
 import { handleGetEstadoDia, handlePostEstadoAnimo, handleGetEstadoMes, handleGetEstadoRango } from "./mood.js";
 import { handleGetPushPublicKey, handleSuscribirPush, handleDesuscribirPush } from "./push.js";
-import { handleScheduled } from "./scheduled.js";
+import { handleScheduled, handleTestPush } from "./scheduled.js";
 
 export default {
   async fetch(request, env) {
@@ -88,6 +88,10 @@ export default {
 
       if (url.pathname === "/push-desuscribir" && request.method === "POST") {
         return await handleDesuscribirPush(request, env, usuarioId);
+      }
+
+      if (url.pathname === "/push-test" && request.method === "GET") {
+        return await handleTestPush(request, env);
       }
 
       return json({ error: "Ruta no encontrada" }, 404);
