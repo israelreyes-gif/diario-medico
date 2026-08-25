@@ -8,5 +8,8 @@
       "database_name": "diario-medico-db",
       "database_id": "6fd17d4c-cebd-45ab-9b3a-35299096aa85"
     }
-  ]
+  ],
+  "triggers": {
+    "crons": ["0 * * * *"]
+  }
 }
