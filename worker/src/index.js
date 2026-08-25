@@ -40,6 +40,11 @@ export default {
         return await handleGetPushPublicKey(env);
       }
 
+      // TEMPORAL para depurar las notificaciones push — sin login, borrar cuando funcione bien
+      if (url.pathname === "/push-test" && request.method === "GET") {
+        return await handleTestPush(request, env);
+      }
+
       const usuarioId = await verificarSesion(request, env);
       if (!usuarioId) {
         return json({ error: "Sesión no válida o caducada. Inicia sesión de nuevo." }, 401);
@@ -88,10 +93,6 @@ export default {
 
       if (url.pathname === "/push-desuscribir" && request.method === "POST") {
         return await handleDesuscribirPush(request, env, usuarioId);
-      }
-
-      if (url.pathname === "/push-test" && request.method === "GET") {
-        return await handleTestPush(request, env);
       }
 
       return json({ error: "Ruta no encontrada" }, 404);
