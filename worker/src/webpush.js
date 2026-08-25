@@ -16,8 +16,6 @@ function uint8ArrayToBase64Url(bytes) {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-// La clave pública VAPID viene en formato "punto sin comprimir": 1 byte (0x04) + X (32 bytes) + Y (32 bytes).
-// Para importar la privada como JWK, Web Crypto necesita también X e Y, así que los sacamos de aquí.
 function coordenadasXYDesdeClavePublica(publicKeyB64Url) {
   const raw = base64UrlToUint8Array(publicKeyB64Url);
   const x = raw.slice(1, 33);
@@ -70,6 +68,27 @@ async function crearVapidJWT(endpointOrigin, subject, publicKeyB64Url, privateKe
   return `${unsigned}.${signatureB64}`;
 }
 
+function concatUint8(arrays) {
+  const total = arrays.reduce((acc, a) => acc + a.length, 0);
+  const resultado = new Uint8Array(total);
+  let offset = 0;
+  for (const arr of arrays) {
+    resultado.set(arr, offset);
+    offset += arr.length;
+  }
+  return resultado;
+}
+
+async function hkdf(clave, salt, info, longitud) {
+  const claveBase = await crypto.subtle.importKey("raw", clave, "HKDF", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "HKDF", hash: "SHA-256", salt, info },
+    claveBase,
+    longitud * 8
+  );
+  return new Uint8Array(bits);
+}
+
 export async function enviarPush(suscripcion, payloadObjeto, env) {
   const { endpoint, p256dh, auth } = suscripcion;
   const url = new URL(endpoint);
@@ -108,18 +127,8 @@ export async function enviarPush(suscripcion, payloadObjeto, env) {
   const secretoCompartido = new Uint8Array(secretoCompartidoBits);
 
   const salt = crypto.getRandomValues(new Uint8Array(16));
-
-  async function hkdf(clave, salt, info, longitud) {
-    const claveBase = await crypto.subtle.importKey("raw", clave, "HKDF", false, ["deriveBits"]);
-    const bits = await crypto.subtle.deriveBits(
-      { name: "HKDF", hash: "SHA-256", salt, info },
-      claveBase,
-      longitud * 8
-    );
-    return new Uint8Array(bits);
-  }
-
   const encoder = new TextEncoder();
+
   const infoAuth = concatUint8([
     encoder.encode("WebPush: info\0"),
     claveClienteRaw,
@@ -130,16 +139,20 @@ export async function enviarPush(suscripcion, payloadObjeto, env) {
   const cek = await hkdf(prk, salt, encoder.encode("Content-Encoding: aes128gcm\0"), 16);
   const nonce = await hkdf(prk, salt, encoder.encode("Content-Encoding: nonce\0"), 12);
 
-  const relleno = new Uint8Array([0]);
-  const contenidoConRelleno = concatUint8([payloadBytes, relleno]);
+  // Byte de relleno: 0x02 marca "este es el único/último bloque" según RFC 8188.
+  // (Antes tenía 0x00 por error, lo que hacía el mensaje indescifrable para el navegador.)
+  const delimitador = new Uint8Array([2]);
+  const contenidoConRelleno = concatUint8([payloadBytes, delimitador]);
 
   const claveAesGcm = await crypto.subtle.importKey("raw", cek, "AES-GCM", false, ["encrypt"]);
   const cifrado = new Uint8Array(
     await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, claveAesGcm, contenidoConRelleno)
   );
 
+  // recordSize es solo el tamaño del bloque cifrado, sin sumar la cabecera.
   const recordSize = new Uint8Array(4);
-  new DataView(recordSize.buffer).setUint32(0, cifrado.length + 16 + 86 - 16, false);
+  new DataView(recordSize.buffer).setUint32(0, cifrado.length, false);
+
   const keyIdLength = new Uint8Array([65]);
   const header = concatUint8([salt, recordSize, keyIdLength, claveServidorPublicaRaw]);
   const cuerpoFinal = concatUint8([header, cifrado]);
@@ -156,15 +169,4 @@ export async function enviarPush(suscripcion, payloadObjeto, env) {
   });
 
   return { ok: res.ok, status: res.status };
-}
-
-function concatUint8(arrays) {
-  const total = arrays.reduce((acc, a) => acc + a.length, 0);
-  const resultado = new Uint8Array(total);
-  let offset = 0;
-  for (const arr of arrays) {
-    resultado.set(arr, offset);
-    offset += arr.length;
-  }
-  return resultado;
 }
