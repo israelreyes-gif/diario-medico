@@ -66,7 +66,6 @@
 .mood-summary-card h4{ font-family:'Fraunces', serif; font-size:13px; font-weight:600; margin:0; }
 .mood-summary-card p{ font-size:10.5px; color:var(--ink-soft); margin:0; }
 
-/* Contenido de los resúmenes semanal/mensual */
 .hero-card{
   background:linear-gradient(155deg, var(--dusk) 0%, var(--dusk-deep) 100%); border-radius:20px;
   padding:20px; color:white; margin-bottom:16px;
@@ -108,3 +107,11 @@
 .coverage-num{ font-size:12px; font-weight:600; color:var(--ink-soft); white-space:nowrap; }
 
 .mood-disclaimer{ font-size:10.5px; color:var(--ink-soft); text-align:center; margin-top:16px; line-height:1.5; padding:0 8px; }
+
+.push-toggle-btn{
+  width:100%; padding:13px; border-radius:14px; border:1.5px solid var(--line); background:var(--paper);
+  color:var(--dusk-deep); font-weight:600; font-size:13.5px; cursor:pointer; margin:16px 0 4px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.push-toggle-btn.active{ background:#EFEAF5; border-color:var(--dusk); }
+.push-toggle-btn:disabled{ opacity:0.6; }
