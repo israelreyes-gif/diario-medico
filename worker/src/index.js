@@ -5,7 +5,7 @@ import { getMedicamentos, handlePostMedicamentos, handleGetHistorico } from "./m
 import { handleGetFichaEmergencia, handlePostFichaEmergencia } from "./emergencia.js";
 import { handleGetEstadoDia, handlePostEstadoAnimo, handleGetEstadoMes, handleGetEstadoRango } from "./mood.js";
 import { handleGetPushPublicKey, handleSuscribirPush, handleDesuscribirPush } from "./push.js";
-import { handleScheduled, handleTestPush } from "./scheduled.js";
+import { handleScheduled } from "./scheduled.js";
 
 export default {
   async fetch(request, env) {
@@ -38,11 +38,6 @@ export default {
 
       if (url.pathname === "/push-public-key" && request.method === "GET") {
         return await handleGetPushPublicKey(env);
-      }
-
-      // TEMPORAL para depurar las notificaciones push — sin login, borrar cuando funcione bien
-      if (url.pathname === "/push-test" && request.method === "GET") {
-        return await handleTestPush(request, env);
       }
 
       const usuarioId = await verificarSesion(request, env);
