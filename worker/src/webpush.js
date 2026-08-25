@@ -16,11 +16,30 @@ function uint8ArrayToBase64Url(bytes) {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-async function importVapidPrivateKey(privateKeyB64Url) {
-  const raw = base64UrlToUint8Array(privateKeyB64Url);
+// La clave pública VAPID viene en formato "punto sin comprimir": 1 byte (0x04) + X (32 bytes) + Y (32 bytes).
+// Para importar la privada como JWK, Web Crypto necesita también X e Y, así que los sacamos de aquí.
+function coordenadasXYDesdeClavePublica(publicKeyB64Url) {
+  const raw = base64UrlToUint8Array(publicKeyB64Url);
+  const x = raw.slice(1, 33);
+  const y = raw.slice(33, 65);
+  return { x: uint8ArrayToBase64Url(x), y: uint8ArrayToBase64Url(y) };
+}
+
+async function importVapidPrivateKey(privateKeyB64Url, publicKeyB64Url) {
+  const { x, y } = coordenadasXYDesdeClavePublica(publicKeyB64Url);
+
+  const jwk = {
+    kty: "EC",
+    crv: "P-256",
+    x,
+    y,
+    d: privateKeyB64Url,
+    ext: true,
+  };
+
   return crypto.subtle.importKey(
-    "pkcs8",
-    raw,
+    "jwk",
+    jwk,
     { name: "ECDSA", namedCurve: "P-256" },
     false,
     ["sign"]
@@ -40,7 +59,7 @@ async function crearVapidJWT(endpointOrigin, subject, publicKeyB64Url, privateKe
   const payloadB64 = uint8ArrayToBase64Url(encoder.encode(JSON.stringify(payload)));
   const unsigned = `${headerB64}.${payloadB64}`;
 
-  const key = await importVapidPrivateKey(privateKeyB64Url);
+  const key = await importVapidPrivateKey(privateKeyB64Url, publicKeyB64Url);
   const signature = await crypto.subtle.sign(
     { name: "ECDSA", hash: "SHA-256" },
     key,
@@ -51,8 +70,6 @@ async function crearVapidJWT(endpointOrigin, subject, publicKeyB64Url, privateKe
   return `${unsigned}.${signatureB64}`;
 }
 
-// Envía una notificación a una suscripción concreta. Devuelve { ok, status } para que
-// quien llame pueda decidir si borrar la suscripción (por ejemplo, si el dispositivo ya no existe).
 export async function enviarPush(suscripcion, payloadObjeto, env) {
   const { endpoint, p256dh, auth } = suscripcion;
   const url = new URL(endpoint);
@@ -63,8 +80,6 @@ export async function enviarPush(suscripcion, payloadObjeto, env) {
   const payloadTexto = JSON.stringify(payloadObjeto);
   const payloadBytes = new TextEncoder().encode(payloadTexto);
 
-  // Cifrado del payload según aes128gcm (RFC 8291): usamos claves efímeras propias
-  // y el par (p256dh, auth) del navegador para derivar la clave compartida.
   const claveServidor = await crypto.subtle.generateKey(
     { name: "ECDH", namedCurve: "P-256" },
     true,
@@ -125,7 +140,6 @@ export async function enviarPush(suscripcion, payloadObjeto, env) {
 
   const recordSize = new Uint8Array(4);
   new DataView(recordSize.buffer).setUint32(0, cifrado.length + 16 + 86 - 16, false);
-  // Cabecera aes128gcm: salt(16) + recordSize(4) + keyIdLength(1) + keyId(65) + cifrado
   const keyIdLength = new Uint8Array([65]);
   const header = concatUint8([salt, recordSize, keyIdLength, claveServidorPublicaRaw]);
   const cuerpoFinal = concatUint8([header, cifrado]);
