@@ -5,6 +5,7 @@ import { getMedicamentos, handlePostMedicamentos, handleGetHistorico } from "./m
 import { handleGetFichaEmergencia, handlePostFichaEmergencia } from "./emergencia.js";
 import { handleGetEstadoDia, handlePostEstadoAnimo, handleGetEstadoMes, handleGetEstadoRango } from "./mood.js";
 import { handleGetPushPublicKey, handleSuscribirPush, handleDesuscribirPush } from "./push.js";
+import { handleScheduled } from "./scheduled.js";
 
 export default {
   async fetch(request, env) {
@@ -93,5 +94,9 @@ export default {
     } catch (err) {
       return json({ error: "Error interno: " + err.message }, 500);
     }
+  },
+
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(handleScheduled(event, env));
   },
 };
