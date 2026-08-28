@@ -3,7 +3,14 @@ import { handleRegister, handleLogin, handleLogout, verificarSesion } from "./au
 import { handleBuscarMedicamentos, handleInfoMedicamento } from "./cima.js";
 import { getMedicamentos, handlePostMedicamentos, handleGetHistorico } from "./medicamentos.js";
 import { handleGetFichaEmergencia, handlePostFichaEmergencia } from "./emergencia.js";
-import { handleGetEstadoDia, handlePostEstadoAnimo, handleGetEstadoMes, handleGetEstadoRango } from "./mood.js";
+import {
+  handleGetRegistrosDia,
+  handleCrearRegistroAnimo,
+  handleEditarRegistroAnimo,
+  handleBorrarRegistroAnimo,
+  handleGetRegistrosMes,
+  handleGetRegistrosRango,
+} from "./mood.js";
 import { handleGetPushPublicKey, handleSuscribirPush, handleDesuscribirPush } from "./push.js";
 import { handleScheduled } from "./scheduled.js";
 
@@ -66,20 +73,30 @@ export default {
         return await handlePostFichaEmergencia(request, env, usuarioId);
       }
 
-      if (url.pathname === "/estado-animo" && request.method === "GET") {
-        return await handleGetEstadoDia(request, env, usuarioId);
+      if (url.pathname === "/animo-dia" && request.method === "GET") {
+        return await handleGetRegistrosDia(request, env, usuarioId);
       }
 
-      if (url.pathname === "/estado-animo" && request.method === "POST") {
-        return await handlePostEstadoAnimo(request, env, usuarioId);
+      if (url.pathname === "/animo-registro" && request.method === "POST") {
+        return await handleCrearRegistroAnimo(request, env, usuarioId);
       }
 
-      if (url.pathname === "/estado-animo-mes" && request.method === "GET") {
-        return await handleGetEstadoMes(request, env, usuarioId);
+      if (url.pathname.startsWith("/animo-registro/") && request.method === "PATCH") {
+        const registroId = url.pathname.split("/")[2];
+        return await handleEditarRegistroAnimo(request, env, usuarioId, registroId);
       }
 
-      if (url.pathname === "/estado-animo-rango" && request.method === "GET") {
-        return await handleGetEstadoRango(request, env, usuarioId);
+      if (url.pathname.startsWith("/animo-registro/") && request.method === "DELETE") {
+        const registroId = url.pathname.split("/")[2];
+        return await handleBorrarRegistroAnimo(env, usuarioId, registroId);
+      }
+
+      if (url.pathname === "/animo-mes" && request.method === "GET") {
+        return await handleGetRegistrosMes(request, env, usuarioId);
+      }
+
+      if (url.pathname === "/animo-rango" && request.method === "GET") {
+        return await handleGetRegistrosRango(request, env, usuarioId);
       }
 
       if (url.pathname === "/push-suscribir" && request.method === "POST") {
