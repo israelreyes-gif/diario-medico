@@ -200,6 +200,34 @@
   </div>
 </div>
 
+<!-- MOOD REGISTRO FORM SHEET -->
+<div class="overlay" id="registroFormOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="info-header">
+      <h3 id="registroFormTitle">Nuevo registro</h3>
+      <button class="info-close" onclick="cerrarRegistroForm()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <div class="field">
+        <label>Hora</label>
+        <input id="registroFormHora" type="time">
+      </div>
+
+      <div class="intensity-label">Emoción</div>
+      <div class="emotion-grid" id="registroFormEmociones"></div>
+
+      <div class="intensity-label">Intensidad</div>
+      <div class="intensity-bar" id="registroFormIntensidad"></div>
+      <div class="intensity-labels" style="margin-bottom:16px;"><span>Muy bajo</span><span>Muy alto</span></div>
+
+      <button class="save-btn" id="registroFormSaveBtn" onclick="guardarRegistroAnimo()">Guardar registro</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/state.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/medications.js"></script>
