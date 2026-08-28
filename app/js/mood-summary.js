@@ -1,4 +1,5 @@
-// Resúmenes semanal, mensual y anual: media, gráfico de evolución, emociones frecuentes, cobertura
+// Resúmenes semanal, mensual y anual: media, gráfico de evolución, emociones frecuentes, cobertura.
+// Trabaja sobre una lista libre de registros (sin franjas fijas), agrupándolos por día donde haga falta.
 
 let moodSummaryType = 'month'; // 'week' | 'month' | 'year'
 let moodSummaryDate = new Date();
@@ -69,25 +70,31 @@ async function loadMoodSummary() {
   document.getElementById('moodSummaryContent').innerHTML = 'Cargando...';
 
   try {
-    const res = await apiFetch(`/estado-animo-rango?inicio=${range.inicio}&fin=${range.fin}`);
+    const res = await apiFetch(`/animo-rango?inicio=${range.inicio}&fin=${range.fin}`);
     const data = await res.json();
-    renderMoodSummary(range, data.dias || []);
+    renderMoodSummary(range, data.registros || []);
   } catch (err) {
     document.getElementById('moodSummaryContent').innerHTML = '<p class="info-error">No se pudo cargar el resumen.</p>';
   }
 }
 
-function calcularPuntosDiarios(range, dias) {
+// A partir de la lista libre de registros, calcula la media diaria (día por día del rango,
+// promediando todos los registros que haya en cada uno; null si ese día no tiene ninguno)
+function calcularPuntosDiarios(range, registros) {
   const porFecha = {};
-  dias.forEach(d => { porFecha[d.fecha] = d; });
+  registros.forEach(r => {
+    if (!porFecha[r.fecha]) porFecha[r.fecha] = [];
+    porFecha[r.fecha].push(r.intensidad);
+  });
 
   const puntos = [];
   const cur = new Date(range.inicio + 'T00:00:00');
   const finD = new Date(range.fin + 'T00:00:00');
   while (cur <= finD) {
     const fechaISO = toISO(cur);
-    const dia = porFecha[fechaISO];
-    puntos.push({ fecha: fechaISO, avg: dia ? promedioDia(dia) : null });
+    const niveles = porFecha[fechaISO];
+    const avg = niveles && niveles.length ? niveles.reduce((a, b) => a + b, 0) / niveles.length : null;
+    puntos.push({ fecha: fechaISO, avg });
     cur.setDate(cur.getDate() + 1);
   }
   return puntos;
@@ -120,7 +127,6 @@ function construirGraficoSVG(puntos) {
   });
   if (currentSeg.length) segments.push(currentSeg);
 
-  // El anual tiene muchos puntos (365): línea más fina y solo se marcan el día más alto y más bajo
   const strokeWidth = moodSummaryType === 'year' ? 1.6 : 2.5;
   const polylines = segments
     .map(seg => `<polyline fill="none" stroke="#6B5B95" stroke-width="${strokeWidth}" stroke-linejoin="round" stroke-linecap="round" points="${seg.join(' ')}"/>`)
@@ -178,12 +184,11 @@ function construirEtiquetasEjeX(puntos) {
     .join('');
 }
 
-function contarEmociones(dias) {
+// Cuenta cuántas veces aparece cada emoción entre TODOS los registros del rango (no por día)
+function contarEmociones(registros) {
   const counts = {};
-  dias.forEach(d => {
-    ['manana', 'tarde', 'noche'].forEach(f => {
-      if (d[f]) counts[d[f].emocion] = (counts[d[f].emocion] || 0) + 1;
-    });
+  registros.forEach(r => {
+    counts[r.emocion] = (counts[r.emocion] || 0) + 1;
   });
   return Object.entries(counts).sort((a, b) => b[1] - a[1]);
 }
@@ -207,15 +212,18 @@ function construirBarrasEmociones(emocionesOrdenadas) {
     .join('');
 }
 
-function renderMoodSummary(range, dias) {
-  const puntos = calcularPuntosDiarios(range, dias);
+function renderMoodSummary(range, registros) {
+  const puntos = calcularPuntosDiarios(range, registros);
   const valoresValidos = puntos.filter(p => p.avg !== null).map(p => p.avg);
   const mediaGlobal = valoresValidos.length ? valoresValidos.reduce((a, b) => a + b, 0) / valoresValidos.length : null;
 
-  const emocionesOrdenadas = contarEmociones(dias);
-  const totalRegistros = emocionesOrdenadas.reduce((acc, [, count]) => acc + count, 0);
-  const totalFranjas = range.totalDias * 3;
-  const coveragePct = totalFranjas ? Math.round((totalRegistros / totalFranjas) * 100) : 0;
+  const emocionesOrdenadas = contarEmociones(registros);
+  const totalRegistros = registros.length;
+
+  // Ya no hay "franjas fijas" que contar (5x3 por día); la cobertura ahora es días con al menos
+  // un registro frente al total de días del periodo, que es la lectura equivalente más honesta.
+  const diasConRegistro = puntos.filter(p => p.avg !== null).length;
+  const coveragePct = range.totalDias ? Math.round((diasConRegistro / range.totalDias) * 100) : 0;
 
   const variabilidadTexto = calcularTextoVariabilidad(valoresValidos, mediaGlobal);
   const graficoSvg = construirGraficoSVG(puntos);
@@ -267,11 +275,11 @@ function renderMoodSummary(range, dias) {
         <span>Cobertura de registros</span>
       </div>
       <div class="coverage-row">
-        <span class="coverage-num">${totalRegistros}</span>
+        <span class="coverage-num">${diasConRegistro}</span>
         <div class="coverage-track"><div class="coverage-fill" style="width:${coveragePct}%"></div></div>
-        <span class="coverage-num">${totalFranjas} franjas</span>
+        <span class="coverage-num">${range.totalDias} días</span>
       </div>
-      <p class="stat-desc" style="margin-top:10px;">Has registrado el <b>${coveragePct}%</b> de las franjas posibles en este periodo.</p>
+      <p class="stat-desc" style="margin-top:10px;">Has registrado al menos una vez en el <b>${coveragePct}%</b> de los días de este periodo (${totalRegistros} registros en total).</p>
     </div>
 
     <p class="mood-disclaimer">
