@@ -26,8 +26,6 @@ function initMoodScreen() {
 
       <div id="moodSlots"></div>
 
-      <button class="save-btn" id="moodSaveBtn" onclick="saveMoodDraft()" disabled>Guardar estado</button>
-
       <button class="push-toggle-btn" id="pushToggleBtn" onclick="onPushToggleClick()">Activar notificaciones de recordatorio</button>
 
       <div class="section-title">
