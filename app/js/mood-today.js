@@ -1,4 +1,4 @@
-// Registro de hoy: lista de entradas libres (sin franjas), añadir/editar/borrar
+// Registro de hoy: lista de entradas libres (sin franjas), añadir y eliminar (deslizando a la izquierda)
 
 let registrosHoy = [];
 let registroEditandoId = null;
@@ -23,13 +23,22 @@ async function loadMoodToday() {
 
 function renderRegistrosHoy() {
   const container = document.getElementById('moodSlots');
+  container.innerHTML = '';
 
   if (registrosHoy.length === 0) {
     container.innerHTML = '<p class="empty-note" style="padding:4px 2px 8px;">Todavía no has registrado nada hoy.</p>';
   } else {
-    container.innerHTML = registrosHoy.map(r => {
+    registrosHoy.forEach(r => {
       const meta = MOOD_EMOTIONS.find(e => e.id === r.emocion);
-      return `
+      const wrap = document.createElement('div');
+      wrap.className = 'mood-entry-wrap';
+      wrap.innerHTML = `
+        <button class="mood-entry-delete" onclick="borrarRegistroAnimo(${r.id})" aria-label="Eliminar">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          </svg>
+        </button>
         <div class="slot-card">
           <div class="slot-head">
             <div class="slot-head-left">
@@ -38,16 +47,18 @@ function renderRegistrosHoy() {
             </div>
             <div class="slot-badge active">${r.hora}</div>
           </div>
-          <div style="display:flex; gap:8px; margin-top:8px;">
-            <button class="add-contact-btn" style="margin:0; flex:1; padding:8px;" onclick="abrirEdicionRegistro(${r.id})">Editar</button>
-            <button class="remove-contact" style="padding:8px 12px; border:1.5px solid var(--line); border-radius:12px;" onclick="borrarRegistroAnimo(${r.id})">Eliminar</button>
-          </div>
         </div>
       `;
-    }).join('');
+      container.appendChild(wrap);
+      attachSwipe(wrap.querySelector('.slot-card'));
+    });
   }
 
-  container.innerHTML += `<button class="add-contact-btn" onclick="abrirNuevoRegistro()">+ Añadir registro</button>`;
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-contact-btn';
+  addBtn.textContent = '+ Añadir registro';
+  addBtn.onclick = abrirNuevoRegistro;
+  container.appendChild(addBtn);
 }
 
 function abrirNuevoRegistro() {
@@ -55,18 +66,6 @@ function abrirNuevoRegistro() {
   nuevoRegistroDraft = { emotion: null, level: null };
   document.getElementById('registroFormTitle').textContent = 'Nuevo registro';
   document.getElementById('registroFormHora').value = new Date().toTimeString().slice(0, 5);
-  renderRegistroFormEmociones();
-  renderRegistroFormIntensidad();
-  document.getElementById('registroFormOverlay').classList.add('show');
-}
-
-function abrirEdicionRegistro(id) {
-  const r = registrosHoy.find(x => x.id === id);
-  if (!r) return;
-  registroEditandoId = id;
-  nuevoRegistroDraft = { emotion: r.emocion, level: r.intensidad };
-  document.getElementById('registroFormTitle').textContent = 'Editar registro';
-  document.getElementById('registroFormHora').value = r.hora;
   renderRegistroFormEmociones();
   renderRegistroFormIntensidad();
   document.getElementById('registroFormOverlay').classList.add('show');
@@ -111,23 +110,13 @@ async function guardarRegistroAnimo() {
   btn.textContent = 'Guardando...';
 
   try {
-    if (registroEditandoId) {
-      const res = await apiFetch(`/animo-registro/${registroEditandoId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hora, emocion: nuevoRegistroDraft.emotion, intensidad: nuevoRegistroDraft.level }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error al guardar');
-    } else {
-      const res = await apiFetch('/animo-registro', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fecha: fechaHoyISO(), hora, emocion: nuevoRegistroDraft.emotion, intensidad: nuevoRegistroDraft.level }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error al guardar');
-    }
+    const res = await apiFetch('/animo-registro', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fecha: fechaHoyISO(), hora, emocion: nuevoRegistroDraft.emotion, intensidad: nuevoRegistroDraft.level }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al guardar');
 
     cerrarRegistroForm();
     await loadMoodToday();
@@ -141,7 +130,10 @@ async function guardarRegistroAnimo() {
 
 async function borrarRegistroAnimo(id) {
   const confirmado = confirm('¿Eliminar este registro?');
-  if (!confirmado) return;
+  if (!confirmado) {
+    renderRegistrosHoy();
+    return;
+  }
 
   try {
     await apiFetch(`/animo-registro/${id}`, { method: 'DELETE' });
