@@ -1,14 +1,14 @@
-// Calendario mensual con un punto de color por día
+// Calendario mensual con un punto de color por día, calculado sobre todos los registros de ese día
 
 let moodCalYear = new Date().getFullYear();
 let moodCalMonth = new Date().getMonth() + 1; // 1-12
-let moodCalData = [];
+let moodCalData = []; // lista plana de registros del mes: { fecha, hora, emocion, intensidad }
 
 async function loadMoodMonth(year, mes) {
   try {
-    const res = await apiFetch(`/estado-animo-mes?year=${year}&mes=${mes}`);
+    const res = await apiFetch(`/animo-mes?year=${year}&mes=${mes}`);
     const data = await res.json();
-    moodCalData = data.dias || [];
+    moodCalData = data.registros || [];
   } catch (err) {
     moodCalData = [];
   }
@@ -22,6 +22,21 @@ function moodChangeMonth(delta) {
   loadMoodMonth(moodCalYear, moodCalMonth);
 }
 
+// Agrupa la lista plana de registros por fecha, y calcula el promedio de intensidad de cada día
+function promedioPorDia(registros) {
+  const porFecha = {};
+  registros.forEach(r => {
+    if (!porFecha[r.fecha]) porFecha[r.fecha] = [];
+    porFecha[r.fecha].push(r.intensidad);
+  });
+
+  const promedios = {};
+  Object.entries(porFecha).forEach(([fecha, niveles]) => {
+    promedios[fecha] = niveles.reduce((a, b) => a + b, 0) / niveles.length;
+  });
+  return promedios;
+}
+
 function renderMoodCalendar(year, mes) {
   const nombreMes = new Date(year, mes - 1, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
   document.getElementById('moodCalMonthLabel').textContent = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
@@ -30,8 +45,7 @@ function renderMoodCalendar(year, mes) {
   const diasEnMes = new Date(year, mes, 0).getDate();
   const hoyISO = fechaHoyISO();
 
-  const datosPorFecha = {};
-  moodCalData.forEach(d => { datosPorFecha[d.fecha] = d; });
+  const promedios = promedioPorDia(moodCalData);
 
   let html = ['L','M','X','J','V','S','D'].map(d => `<div class="cal-dow">${d}</div>`).join('');
 
@@ -42,9 +56,8 @@ function renderMoodCalendar(year, mes) {
   for (let dia = 1; dia <= diasEnMes; dia++) {
     const fechaISO = `${year}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
     const esHoy = fechaISO === hoyISO;
-    const datosDia = datosPorFecha[fechaISO];
-    const promedio = datosDia ? promedioDia(datosDia) : null;
-    const dot = promedio !== null ? `<div class="dot" style="background:${colorNivel(promedio)}"></div>` : '';
+    const promedio = promedios[fechaISO];
+    const dot = promedio !== undefined ? `<div class="dot" style="background:${colorNivel(promedio)}"></div>` : '';
 
     html += `<div class="cal-day ${esHoy ? 'today' : ''}">${dia}${dot}</div>`;
   }
