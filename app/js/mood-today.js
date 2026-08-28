@@ -1,7 +1,8 @@
-// Registro de hoy: franja activa según la hora, franjas bloqueadas de solo lectura, guardado
+// Registro de hoy: lista de entradas libres (sin franjas), añadir/editar/borrar
 
-let moodToday = { fecha: null, manana: null, tarde: null, noche: null };
-let moodDraft = { emotion: null, level: null };
+let registrosHoy = [];
+let registroEditandoId = null;
+let nuevoRegistroDraft = { emotion: null, level: null };
 
 async function loadMoodToday() {
   const fecha = fechaHoyISO();
@@ -9,125 +10,143 @@ async function loadMoodToday() {
     new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
   try {
-    const res = await apiFetch(`/estado-animo?fecha=${fecha}`);
+    const res = await apiFetch(`/animo-dia?fecha=${fecha}`);
     const data = await res.json();
-    moodToday = data;
+    registrosHoy = data.registros || [];
   } catch (err) {
-    moodToday = { fecha, manana: null, tarde: null, noche: null };
+    registrosHoy = [];
   }
 
-  renderMoodSlots();
+  renderRegistrosHoy();
   await loadMoodMonth(moodCalYear, moodCalMonth);
 }
 
-function renderMoodSlots() {
-  const activa = franjaActivaAhora();
+function renderRegistrosHoy() {
   const container = document.getElementById('moodSlots');
-  container.innerHTML = '';
 
-  MOOD_SLOTS.forEach(slot => {
-    const isActive = slot.id === activa;
-    const saved = moodToday[slot.id];
-    const card = document.createElement('div');
-    card.className = 'slot-card' + (isActive ? '' : ' locked');
-
-    if (isActive) {
-      moodDraft = saved ? { emotion: saved.emocion, level: saved.intensidad } : { emotion: null, level: null };
-
-      card.innerHTML = `
-        <div class="slot-head">
-          <div class="slot-head-left"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${slot.icon}</svg><span>${slot.label}</span></div>
-          <div class="slot-badge active">Disponible ahora</div>
+  if (registrosHoy.length === 0) {
+    container.innerHTML = '<p class="empty-note" style="padding:4px 2px 8px;">Todavía no has registrado nada hoy.</p>';
+  } else {
+    container.innerHTML = registrosHoy.map(r => {
+      const meta = MOOD_EMOTIONS.find(e => e.id === r.emocion);
+      return `
+        <div class="slot-card">
+          <div class="slot-head">
+            <div class="slot-head-left">
+              <span style="font-size:18px;">${meta?.emo || '❓'}</span>
+              <span>${meta?.label || r.emocion} · Intensidad ${r.intensidad}</span>
+            </div>
+            <div class="slot-badge active">${r.hora}</div>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button class="add-contact-btn" style="margin:0; flex:1; padding:8px;" onclick="abrirEdicionRegistro(${r.id})">Editar</button>
+            <button class="remove-contact" style="padding:8px 12px; border:1.5px solid var(--line); border-radius:12px;" onclick="borrarRegistroAnimo(${r.id})">Eliminar</button>
+          </div>
         </div>
-        <div class="emotion-grid" id="moodEmoGrid">
-          ${MOOD_EMOTIONS.map(e => `
-            <div class="emotion-btn ${moodDraft.emotion === e.id ? 'selected' : ''}" onclick="selectMoodEmotion('${e.id}')">
-              <span class="emo">${e.emo}</span><span class="lbl">${e.label}</span>
-            </div>`).join('')}
-        </div>
-        <div class="intensity-label">Intensidad</div>
-        <div class="intensity-bar" id="moodIntBar">
-          ${[1,2,3,4,5].map(n => `<div class="intensity-seg i${n} ${moodDraft.level === n ? 'selected' : ''}" onclick="selectMoodLevel(${n})"></div>`).join('')}
-        </div>
-        <div class="intensity-labels"><span>Muy bajo</span><span>Muy alto</span></div>
       `;
-    } else {
-      const lockBadge = `<div class="slot-badge locked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>${slot.range}</div>`;
+    }).join('');
+  }
 
-      const body = saved
-        ? `<div class="locked-summary">
-             <span class="emo">${MOOD_EMOTIONS.find(e => e.id === saved.emocion)?.emo || '❓'}</span>
-             <div class="info">
-               <div class="name">${MOOD_EMOTIONS.find(e => e.id === saved.emocion)?.label || saved.emocion}</div>
-               <div class="level">Intensidad ${saved.intensidad} de 5</div>
-             </div>
-           </div>`
-        : `<div class="locked-empty">
-             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-             Aún no registrado — se desbloqueará en su horario
-           </div>`;
-
-      card.innerHTML = `
-        <div class="slot-head">
-          <div class="slot-head-left"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${slot.icon}</svg><span>${slot.label}</span></div>
-          ${lockBadge}
-        </div>
-        ${body}
-      `;
-    }
-
-    container.appendChild(card);
-  });
-
-  updateMoodSaveButton();
+  container.innerHTML += `<button class="add-contact-btn" onclick="abrirNuevoRegistro()">+ Añadir registro</button>`;
 }
 
-function selectMoodEmotion(emotionId) {
-  moodDraft.emotion = emotionId;
-  document.querySelectorAll('#moodEmoGrid .emotion-btn').forEach(btn => btn.classList.remove('selected'));
-  event.currentTarget.classList.add('selected');
-  updateMoodSaveButton();
+function abrirNuevoRegistro() {
+  registroEditandoId = null;
+  nuevoRegistroDraft = { emotion: null, level: null };
+  document.getElementById('registroFormTitle').textContent = 'Nuevo registro';
+  document.getElementById('registroFormHora').value = new Date().toTimeString().slice(0, 5);
+  renderRegistroFormEmociones();
+  renderRegistroFormIntensidad();
+  document.getElementById('registroFormOverlay').classList.add('show');
 }
 
-function selectMoodLevel(level) {
-  moodDraft.level = level;
-  document.querySelectorAll('#moodIntBar .intensity-seg').forEach(seg => seg.classList.remove('selected'));
-  event.currentTarget.classList.add('selected');
-  updateMoodSaveButton();
+function abrirEdicionRegistro(id) {
+  const r = registrosHoy.find(x => x.id === id);
+  if (!r) return;
+  registroEditandoId = id;
+  nuevoRegistroDraft = { emotion: r.emocion, level: r.intensidad };
+  document.getElementById('registroFormTitle').textContent = 'Editar registro';
+  document.getElementById('registroFormHora').value = r.hora;
+  renderRegistroFormEmociones();
+  renderRegistroFormIntensidad();
+  document.getElementById('registroFormOverlay').classList.add('show');
 }
 
-function updateMoodSaveButton() {
-  const btn = document.getElementById('moodSaveBtn');
-  if (btn) btn.disabled = !(moodDraft.emotion && moodDraft.level);
+function cerrarRegistroForm() {
+  document.getElementById('registroFormOverlay').classList.remove('show');
 }
 
-async function saveMoodDraft() {
-  const btn = document.getElementById('moodSaveBtn');
-  const franja = franjaActivaAhora();
+function renderRegistroFormEmociones() {
+  document.getElementById('registroFormEmociones').innerHTML = MOOD_EMOTIONS.map(e => `
+    <div class="emotion-btn ${nuevoRegistroDraft.emotion === e.id ? 'selected' : ''}" onclick="seleccionarEmocionRegistro('${e.id}')">
+      <span class="emo">${e.emo}</span><span class="lbl">${e.label}</span>
+    </div>`).join('');
+}
+
+function renderRegistroFormIntensidad() {
+  document.getElementById('registroFormIntensidad').innerHTML = [1,2,3,4,5].map(n =>
+    `<div class="intensity-seg i${n} ${nuevoRegistroDraft.level === n ? 'selected' : ''}" onclick="seleccionarIntensidadRegistro(${n})"></div>`
+  ).join('');
+}
+
+function seleccionarEmocionRegistro(id) {
+  nuevoRegistroDraft.emotion = id;
+  renderRegistroFormEmociones();
+}
+
+function seleccionarIntensidadRegistro(n) {
+  nuevoRegistroDraft.level = n;
+  renderRegistroFormIntensidad();
+}
+
+async function guardarRegistroAnimo() {
+  const hora = document.getElementById('registroFormHora').value;
+  if (!nuevoRegistroDraft.emotion || !nuevoRegistroDraft.level) {
+    alert('Elige una emoción y una intensidad.');
+    return;
+  }
+
+  const btn = document.getElementById('registroFormSaveBtn');
   btn.disabled = true;
   btn.textContent = 'Guardando...';
 
   try {
-    const res = await apiFetch('/estado-animo', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fecha: fechaHoyISO(),
-        franja,
-        emocion: moodDraft.emotion,
-        intensidad: moodDraft.level,
-        horaLocal: new Date().getHours(),
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al guardar');
-    moodToday = data;
-    renderMoodSlots();
-    await loadMoodMonth(moodCalYear, moodCalMonth);
+    if (registroEditandoId) {
+      const res = await apiFetch(`/animo-registro/${registroEditandoId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hora, emocion: nuevoRegistroDraft.emotion, intensidad: nuevoRegistroDraft.level }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al guardar');
+    } else {
+      const res = await apiFetch('/animo-registro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fecha: fechaHoyISO(), hora, emocion: nuevoRegistroDraft.emotion, intensidad: nuevoRegistroDraft.level }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al guardar');
+    }
+
+    cerrarRegistroForm();
+    await loadMoodToday();
   } catch (err) {
     alert('No se pudo guardar: ' + err.message);
   } finally {
-    btn.textContent = 'Guardar estado';
-    updateMoodSaveButton();
+    btn.disabled = false;
+    btn.textContent = 'Guardar registro';
+  }
+}
+
+async function borrarRegistroAnimo(id) {
+  const confirmado = confirm('¿Eliminar este registro?');
+  if (!confirmado) return;
+
+  try {
+    await apiFetch(`/animo-registro/${id}`, { method: 'DELETE' });
+    await loadMoodToday();
+  } catch (err) {
+    alert('No se pudo eliminar: ' + err.message);
   }
 }
