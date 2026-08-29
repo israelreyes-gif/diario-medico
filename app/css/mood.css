@@ -39,7 +39,6 @@
 .intensity-labels{ display:flex; justify-content:space-between; margin-top:5px; }
 .intensity-labels span{ font-size:9px; color:var(--ink-soft); }
 
-/* El input de hora en iOS desborda su contenedor si no se le quita el estilo nativo */
 #registroFormHora{
   -webkit-appearance:none; appearance:none;
   width:100%; box-sizing:border-box;
@@ -123,6 +122,8 @@
 .push-toggle-btn.active{ background:#EFEAF5; border-color:var(--dusk); }
 .push-toggle-btn:disabled{ opacity:0.6; }
 
-/* Quita el rebote elástico nativo de iOS solo en la pantalla de Estado de ánimo,
-   ya que aquí el .list envuelve toda la pantalla (no solo una lista de tarjetas) */
-#moodScreen .list{ -webkit-overflow-scrolling:auto; }
+/* Quita el rebote elástico nativo de iOS en las pantallas donde .list envuelve
+   toda la pantalla (no solo una lista de tarjetas): Estado de ánimo y Ficha de emergencia.
+   Pastillero no lo necesita porque su .list es solo la lista de medicamentos. */
+#moodScreen .list,
+#emergencyScreen .list{ -webkit-overflow-scrolling:auto; }
