@@ -14,8 +14,6 @@
   --dusk-deep:#4A3D6B;
   --line:#E8E1D3;
   --danger:#B23B3B;
-  /* Escala de intensidad del ánimo: no es "malo a bueno", es distancia al equilibrio.
-     Extremos (1 y 5) en rojo, centro (3) en verde, transición (2 y 4) en ámbar. */
   --mood1:#B23B3B;
   --mood2:#D9A441;
   --mood3:#4F8F6E;
@@ -100,7 +98,7 @@ header{
 .list{
   padding:0 20px 90px; display:flex; flex-direction:column; gap:12px;
   flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
-  overscroll-behavior:contain;
+  overscroll-behavior:none;
 }
 
 .med-card-wrap{
