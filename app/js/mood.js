@@ -1,5 +1,5 @@
-// Estado de ánimo: solo el montaje de la pantalla (el resto vive en mood-shared.js,
-// mood-today.js, mood-calendar.js y mood-summary.js)
+// Bienestar: solo el montaje de la pantalla (el resto vive en mood-shared.js, mood-today.js,
+// mood-calendar.js, mood-summary.js, mood-day-detail.js y mood-tabs.js)
 
 function initMoodScreen() {
   const el = document.getElementById('moodScreen');
@@ -12,7 +12,7 @@ function initMoodScreen() {
         <div class="app-icon-sm mood">
           <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
         </div>
-        <h1>Estado de ánimo</h1>
+        <h1>Bienestar</h1>
       </div>
     </header>
 
@@ -24,9 +24,19 @@ function initMoodScreen() {
       </div>
       <p class="empty-note" id="moodTodayLabel" style="margin:-6px 0 12px;"></p>
 
-      <div id="moodSlots"></div>
+      <div class="bienestar-tabs">
+        <button class="bienestar-tab-btn active" id="tabBtnAnimo" onclick="switchBienestarTab('animo')">Ánimo</button>
+        <button class="bienestar-tab-btn" id="tabBtnConstantes" onclick="switchBienestarTab('constantes')">Constantes</button>
+      </div>
 
-      <button class="push-toggle-btn" id="pushToggleBtn" onclick="onPushToggleClick()">Activar notificaciones de recordatorio</button>
+      <div id="tabPanelAnimo">
+        <div id="moodSlots"></div>
+        <button class="push-toggle-btn" id="pushToggleBtn" onclick="onPushToggleClick()">Activar notificaciones de recordatorio</button>
+      </div>
+
+      <div id="tabPanelConstantes" class="hide">
+        <p class="empty-note" style="padding:4px 2px 8px;">El registro de constantes vitales estará disponible en el siguiente paso.</p>
+      </div>
 
       <div class="section-title">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
