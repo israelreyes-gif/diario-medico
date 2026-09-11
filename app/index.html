@@ -228,6 +228,22 @@
   </div>
 </div>
 
+<!-- DAY DETAIL SHEET -->
+<div class="overlay" id="dayDetailOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="info-header">
+      <h3 id="dayDetailTitle">Día</h3>
+      <button class="info-close" onclick="toggleDayDetail(false)" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <div id="dayDetailContent">Cargando...</div>
+    </div>
+  </div>
+</div>
+
 <script src="js/state.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/medications.js"></script>
@@ -238,6 +254,7 @@
 <script src="js/mood-today.js"></script>
 <script src="js/mood-calendar.js"></script>
 <script src="js/mood-summary.js"></script>
+<script src="js/mood-day-detail.js"></script>
 <script src="js/mood.js"></script>
 <script src="js/push.js"></script>
 <script src="js/home.js"></script>
