@@ -141,3 +141,11 @@
   width:100%; min-height:140px; border-radius:14px; border:1px solid var(--line); background:var(--cream);
   padding:12px; font-family:inherit; font-size:14px; color:var(--ink); resize:vertical; box-sizing:border-box;
 }
+
+.bienestar-tabs{ display:flex; gap:8px; margin-bottom:14px; }
+.bienestar-tab-btn{
+  flex:1; padding:10px; border-radius:12px; border:1px solid var(--line); background:var(--paper);
+  font-weight:600; font-size:13px; color:var(--ink-soft); cursor:pointer; font-family:inherit;
+}
+.bienestar-tab-btn.active{ background:var(--dusk-deep); color:white; border-color:var(--dusk-deep); }
+.hide{ display:none; }
