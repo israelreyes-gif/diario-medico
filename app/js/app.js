@@ -10,6 +10,7 @@ document.getElementById('historyOverlay').addEventListener('click', e => { if (e
 document.getElementById('infoOverlay').addEventListener('click', e => { if (e.target.id === 'infoOverlay') toggleInfo(false); });
 document.getElementById('moodSummaryOverlay').addEventListener('click', e => { if (e.target.id === 'moodSummaryOverlay') toggleMoodSummary(false); });
 document.getElementById('registroFormOverlay').addEventListener('click', e => { if (e.target.id === 'registroFormOverlay') cerrarRegistroForm(); });
+document.getElementById('dayDetailOverlay').addEventListener('click', e => { if (e.target.id === 'dayDetailOverlay') toggleDayDetail(false); });
 
 initAutocomplete();
 
