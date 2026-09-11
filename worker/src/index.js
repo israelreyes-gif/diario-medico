@@ -3,7 +3,7 @@ import { handleRegister, handleLogin, handleLogout, verificarSesion } from "./au
 import { handleBuscarMedicamentos, handleInfoMedicamento } from "./cima.js";
 import { getMedicamentos, handlePostMedicamentos, handleGetHistorico } from "./medicamentos.js";
 import { handleGetFichaEmergencia, handlePostFichaEmergencia } from "./emergencia.js";
-import {
+import {d
   handleGetRegistrosDia,
   handleCrearRegistroAnimo,
   handleEditarRegistroAnimo,
