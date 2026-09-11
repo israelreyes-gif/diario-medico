@@ -10,6 +10,8 @@ import {
   handleBorrarRegistroAnimo,
   handleGetRegistrosMes,
   handleGetRegistrosRango,
+  handleGetComentarioDia,
+  handlePostComentarioDia,
 } from "./mood.js";
 import { handleGetPushPublicKey, handleSuscribirPush, handleDesuscribirPush } from "./push.js";
 import { handleScheduled } from "./scheduled.js";
@@ -97,6 +99,14 @@ export default {
 
       if (url.pathname === "/animo-rango" && request.method === "GET") {
         return await handleGetRegistrosRango(request, env, usuarioId);
+      }
+
+      if (url.pathname === "/animo-comentario" && request.method === "GET") {
+        return await handleGetComentarioDia(request, env, usuarioId);
+      }
+
+      if (url.pathname === "/animo-comentario" && request.method === "POST") {
+        return await handlePostComentarioDia(request, env, usuarioId);
       }
 
       if (url.pathname === "/push-suscribir" && request.method === "POST") {
