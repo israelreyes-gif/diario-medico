@@ -10,6 +10,11 @@ function horaActualHHMM() {
   return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
 }
 
+function fechaHoyISO() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
 // Devuelve todos los registros de un día concreto, ordenados por hora
 export async function handleGetRegistrosDia(request, env, usuarioId) {
   const url = new URL(request.url);
@@ -118,7 +123,14 @@ export async function handleGetRegistrosMes(request, env, usuarioId) {
     .bind(usuarioId, `${prefijo}%`)
     .all();
 
-  return json({ registros: results });
+  // Días de ese mes que tienen comentario, para marcarlos en el calendario
+  const { results: comentarios } = await env.DB.prepare(
+    "SELECT fecha FROM comentarios_animo WHERE usuario_id = ? AND fecha LIKE ?"
+  )
+    .bind(usuarioId, `${prefijo}%`)
+    .all();
+
+  return json({ registros: results, diasConComentario: comentarios.map((c) => c.fecha) });
 }
 
 // Todos los registros de un rango de fechas (para los resúmenes semanal/mensual/anual)
@@ -146,4 +158,51 @@ export async function handleGetRegistrosRango(request, env, usuarioId) {
     .all();
 
   return json({ registros: results });
+}
+
+// Comentario de un día concreto (puede no existir todavía)
+export async function handleGetComentarioDia(request, env, usuarioId) {
+  const url = new URL(request.url);
+  const fecha = url.searchParams.get("fecha");
+
+  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return json({ error: "Fecha no válida, se espera YYYY-MM-DD." }, 400);
+  }
+
+  const fila = await env.DB.prepare(
+    "SELECT comentario, actualizado_en FROM comentarios_animo WHERE usuario_id = ? AND fecha = ?"
+  )
+    .bind(usuarioId, fecha)
+    .first();
+
+  return json({ fecha, comentario: fila ? fila.comentario : null });
+}
+
+export async function handlePostComentarioDia(request, env, usuarioId) {
+  const body = await request.json();
+  const { fecha, comentario } = body;
+
+  if (!fecha || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return json({ error: "Fecha no válida, se espera YYYY-MM-DD." }, 400);
+  }
+  if (fecha > fechaHoyISO()) {
+    return json({ error: "No se pueden añadir comentarios en días futuros." }, 400);
+  }
+  if (typeof comentario !== "string" || comentario.trim().length === 0) {
+    return json({ error: "El comentario no puede estar vacío." }, 400);
+  }
+
+  const ahora = new Date().toISOString();
+
+  await env.DB.prepare(
+    `INSERT INTO comentarios_animo (usuario_id, fecha, comentario, actualizado_en)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(usuario_id, fecha) DO UPDATE SET
+       comentario = excluded.comentario,
+       actualizado_en = excluded.actualizado_en`
+  )
+    .bind(usuarioId, fecha, comentario.trim(), ahora)
+    .run();
+
+  return json({ fecha, comentario: comentario.trim() });
 }
