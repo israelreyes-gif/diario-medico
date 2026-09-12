@@ -1,6 +1,6 @@
-// Página de inicio: tarjetas de navegación a cada sección.
-// Para añadir una sección nueva a la app en el futuro, solo hay que añadir un objeto
-// a esta lista — no hace falta tocar index.html.
+// Página de inicio: tarjetas de navegación a cada sección, y el área de tareas pendientes
+// (por ejemplo, activar notificaciones). Para añadir una sección nueva a la app en el futuro,
+// solo hay que añadir un objeto a HOME_SECTIONS — no hace falta tocar index.html.
 
 const HOME_SECTIONS = [
   {
@@ -39,5 +39,7 @@ function renderHomeCards() {
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
       </div>
     </div>
-  `).join('');
+  `).join('') + '<div id="homeTaskArea"></div>';
+
+  updateHomePushTask();
 }
