@@ -32,3 +32,32 @@
 .app-icon-btn{
   border:none; background:none; padding:0; cursor:pointer; display:flex;
 }
+
+.home-task-title{
+  font-family:'Fraunces', serif; font-size:14px; font-weight:600; color:var(--ink-soft);
+  margin:6px 2px 2px;
+}
+.home-task-card{
+  background:var(--paper); border-radius:18px; padding:14px;
+  border:1px solid var(--line); display:flex; align-items:flex-start; gap:12px;
+  box-shadow:0 2px 10px rgba(51,48,43,0.04);
+}
+.home-task-icon{
+  width:38px; height:38px; border-radius:12px; flex-shrink:0;
+  background:linear-gradient(155deg, var(--dusk) 0%, var(--dusk-deep) 100%);
+  display:flex; align-items:center; justify-content:center;
+}
+.home-task-icon svg{ width:18px; height:18px; }
+.home-task-text{ flex:1; }
+.home-task-text h4{ font-family:'Fraunces', serif; font-size:13.5px; font-weight:600; margin:0 0 3px; }
+.home-task-text p{ font-size:11.5px; color:var(--ink-soft); margin:0; line-height:1.4; }
+.home-task-actions{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex-shrink:0; }
+.home-task-btn{
+  padding:7px 12px; border-radius:10px; border:none; background:var(--dusk-deep); color:white;
+  font-size:11.5px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap;
+}
+.home-task-dismiss{
+  width:22px; height:22px; border-radius:50%; border:none; background:var(--cream);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.home-task-dismiss svg{ width:11px; height:11px; stroke:var(--ink-soft); }
