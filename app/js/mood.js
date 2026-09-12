@@ -1,5 +1,5 @@
 // Bienestar: solo el montaje de la pantalla (el resto vive en mood-shared.js, mood-today.js,
-// mood-calendar.js, mood-summary.js, mood-day-detail.js y mood-tabs.js)
+// mood-calendar.js, mood-summary.js, mood-day-detail.js, mood-tabs.js y vitals-today.js)
 
 function initMoodScreen() {
   const el = document.getElementById('moodScreen');
@@ -34,7 +34,7 @@ function initMoodScreen() {
       </div>
 
       <div id="tabPanelConstantes" class="hide">
-        <p class="empty-note" style="padding:4px 2px 8px;">El registro de constantes vitales estará disponible en el siguiente paso.</p>
+        <div id="vitalsSlots"></div>
       </div>
 
       <div class="section-title">
@@ -54,6 +54,8 @@ function initMoodScreen() {
         <div class="mood-legend-item"><div class="mood-legend-dot" style="background:var(--mood3)"></div>Neutro</div>
         <div class="mood-legend-item"><div class="mood-legend-dot" style="background:var(--mood2)"></div>Transición</div>
         <div class="mood-legend-item"><div class="mood-legend-dot" style="background:var(--mood1)"></div>Extremo (alto o bajo)</div>
+        <div class="mood-legend-item"><div class="mood-legend-dot" style="background:var(--dusk)"></div>Comentario</div>
+        <div class="mood-legend-item"><div class="mood-legend-dot" style="background:var(--danger)"></div>Constantes</div>
       </div>
 
       <div class="summary-row">
