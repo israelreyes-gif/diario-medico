@@ -33,15 +33,16 @@
 .help-legend{ margin-top:10px; display:flex; flex-direction:column; gap:5px; }
 .help-legend-row{ display:flex; align-items:flex-start; gap:6px; font-size:11.5px; color:var(--ink-soft); line-height:1.4; }
 
-/* Botón flotante para volver al índice */
+/* Botón flotante para volver al índice (pantalla completa, igual que el FAB de Pastillero) */
 .help-back-top-btn{
-  position:sticky; bottom:16px; margin-left:auto; width:42px; height:42px; border-radius:50%;
-  background:var(--teal-deep); box-shadow:0 6px 16px rgba(30,71,68,0.3);
-  display:none; align-items:center; justify-content:center; border:none; cursor:pointer;
+  position:absolute; right:20px; bottom:calc(20px + env(safe-area-inset-bottom));
+  width:46px; height:46px; border-radius:50%; border:none;
+  background:var(--teal-deep); box-shadow:0 8px 20px rgba(30,71,68,0.35);
+  display:none; align-items:center; justify-content:center; cursor:pointer;
   z-index:5;
 }
 .help-back-top-btn.show{ display:flex; }
-.help-back-top-btn svg{ width:19px; height:19px; stroke:white; }
+.help-back-top-btn svg{ width:20px; height:20px; stroke:white; }
 
 /* Mockup: Bienestar */
 .help-mock-tabs{ display:flex; gap:6px; margin-bottom:10px; }
