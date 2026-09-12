@@ -31,6 +31,13 @@ const HOME_SECTIONS = [
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M9 15h6"/><path d="M9 11h6"/></svg>',
     onClick: 'openReportForm()',
   },
+  {
+    className: 'help',
+    title: 'Ayuda',
+    subtitle: 'Cómo usar cada sección de la app',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>',
+    onClick: 'openHelpSheet()',
+  },
 ];
 
 function renderHomeCards() {
