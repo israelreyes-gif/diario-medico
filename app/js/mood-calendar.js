@@ -1,21 +1,29 @@
-// Calendario mensual con un punto de color por día (calculado sobre todos los registros de ese día)
-// y una marca aparte para los días que tienen comentario. Cada día pasado o de hoy es tocable
-// y abre la hoja de detalle; los días futuros no responden al toque.
+// Calendario mensual con un punto de color por día (calculado sobre todos los registros de ánimo
+// de ese día) y dos marcas aparte: una para "tiene comentario" y otra para "tiene constantes".
+// Cada día pasado o de hoy es tocable y abre la hoja de detalle; los días futuros no responden al toque.
 
 let moodCalYear = new Date().getFullYear();
 let moodCalMonth = new Date().getMonth() + 1; // 1-12
 let moodCalData = []; // lista plana de registros del mes: { fecha, hora, emocion, intensidad }
 let moodCalDiasConComentario = [];
+let moodCalDiasConConstantes = [];
 
 async function loadMoodMonth(year, mes) {
   try {
-    const res = await apiFetch(`/animo-mes?year=${year}&mes=${mes}`);
-    const data = await res.json();
-    moodCalData = data.registros || [];
-    moodCalDiasConComentario = data.diasConComentario || [];
+    const [resAnimo, resVitals] = await Promise.all([
+      apiFetch(`/animo-mes?year=${year}&mes=${mes}`),
+      apiFetch(`/vitals-mes?year=${year}&mes=${mes}`),
+    ]);
+    const dataAnimo = await resAnimo.json();
+    const dataVitals = await resVitals.json();
+
+    moodCalData = dataAnimo.registros || [];
+    moodCalDiasConComentario = dataAnimo.diasConComentario || [];
+    moodCalDiasConConstantes = dataVitals.diasConConstantes || [];
   } catch (err) {
     moodCalData = [];
     moodCalDiasConComentario = [];
+    moodCalDiasConConstantes = [];
   }
   renderMoodCalendar(year, mes);
 }
@@ -51,6 +59,7 @@ function renderMoodCalendar(year, mes) {
 
   const promedios = promedioPorDia(moodCalData);
   const comentarioSet = new Set(moodCalDiasConComentario);
+  const constantesSet = new Set(moodCalDiasConConstantes);
 
   let html = ['L','M','X','J','V','S','D'].map(d => `<div class="cal-dow">${d}</div>`).join('');
 
@@ -65,6 +74,7 @@ function renderMoodCalendar(year, mes) {
     const promedio = promedios[fechaISO];
     const dot = promedio !== undefined ? `<div class="dot" style="background:${colorNivel(promedio)}"></div>` : '';
     const marcaComentario = comentarioSet.has(fechaISO) ? '<div class="comment-mark"></div>' : '';
+    const marcaConstantes = constantesSet.has(fechaISO) ? '<div class="vitals-mark"></div>' : '';
 
     const clases = ['cal-day'];
     if (esHoy) clases.push('today');
@@ -72,7 +82,7 @@ function renderMoodCalendar(year, mes) {
 
     const onclick = esFuturo ? '' : `onclick="openDayDetail('${fechaISO}')"`;
 
-    html += `<div class="${clases.join(' ')}" ${onclick}>${marcaComentario}${dia}${dot}</div>`;
+    html += `<div class="${clases.join(' ')}" ${onclick}>${marcaComentario}${marcaConstantes}${dia}${dot}</div>`;
   }
 
   document.getElementById('moodCalGrid').innerHTML = html;
