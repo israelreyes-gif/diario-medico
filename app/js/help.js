@@ -25,7 +25,7 @@ function initHelpScreen() {
       </div>
     </header>
 
-    <div class="list" id="helpList" style="padding-bottom:40px;">
+    <div class="list" id="helpList" style="padding-bottom:40px; position:relative;">
       <div class="help-index" id="helpIndexTop">
         ${HELP_SECTIONS.map(s => `
           <div class="help-index-item" onclick="scrollToHelpSection('${s.id}')">
@@ -63,8 +63,8 @@ function scrollToHelpSection(id) {
 }
 
 function scrollToHelpTop() {
-  const el = document.getElementById('helpIndexTop');
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const list = document.getElementById('helpList');
+  if (list) list.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function helpSectionHead(icono, color, titulo) {
