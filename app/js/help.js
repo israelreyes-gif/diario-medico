@@ -1,5 +1,6 @@
 // Ayuda: hoja única con índice de secciones (Bienestar, Medicación, Emergencia,
-// Exportar informe, Notificaciones) que hace scroll a cada sección al tocarla.
+// Exportar informe, Notificaciones) que hace scroll a cada sección al tocarla,
+// y un botón flotante para volver arriba, al índice, sin tener que hacer scroll manual.
 
 const HELP_SECTIONS = [
   { id: 'help-bienestar', color: 'var(--dusk-deep)', label: 'Bienestar' },
@@ -12,7 +13,7 @@ const HELP_SECTIONS = [
 function openHelpSheet() {
   const el = document.getElementById('helpContent');
   el.innerHTML = `
-    <div class="help-index">
+    <div class="help-index" id="helpIndexTop">
       ${HELP_SECTIONS.map(s => `
         <div class="help-index-item" onclick="scrollToHelpSection('${s.id}')">
           <div class="help-index-dot" style="background:${s.color}"></div>
@@ -27,8 +28,23 @@ function openHelpSheet() {
     ${renderHelpEmergencia()}
     ${renderHelpInforme()}
     ${renderHelpNotificaciones()}
+
+    <button class="help-back-top-btn" id="helpBackTopBtn" onclick="scrollToHelpTop()" aria-label="Volver al índice">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+    </button>
   `;
   document.getElementById('helpOverlay').classList.add('show');
+
+  const sheet = document.querySelector('#helpOverlay .sheet');
+  sheet.scrollTop = 0;
+  sheet.removeEventListener('scroll', onHelpScroll);
+  sheet.addEventListener('scroll', onHelpScroll);
+}
+
+function onHelpScroll(e) {
+  const btn = document.getElementById('helpBackTopBtn');
+  if (!btn) return;
+  btn.classList.toggle('show', e.target.scrollTop > 200);
 }
 
 function toggleHelp(show) {
@@ -37,6 +53,11 @@ function toggleHelp(show) {
 
 function scrollToHelpSection(id) {
   const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function scrollToHelpTop() {
+  const el = document.getElementById('helpIndexTop');
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
