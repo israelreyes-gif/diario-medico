@@ -1,4 +1,4 @@
-// Ayuda: hoja única con índice de secciones (Bienestar, Medicación, Emergencia,
+// Ayuda: pantalla completa (no popup) con índice de secciones (Bienestar, Medicación, Emergencia,
 // Exportar informe, Notificaciones) que hace scroll a cada sección al tocarla,
 // y un botón flotante para volver arriba, al índice, sin tener que hacer scroll manual.
 
@@ -10,45 +10,51 @@ const HELP_SECTIONS = [
   { id: 'help-notificaciones', color: 'var(--dusk)', label: 'Notificaciones' },
 ];
 
-function openHelpSheet() {
-  const el = document.getElementById('helpContent');
+function initHelpScreen() {
+  const el = document.getElementById('helpScreen');
   el.innerHTML = `
-    <div class="help-index" id="helpIndexTop">
-      ${HELP_SECTIONS.map(s => `
-        <div class="help-index-item" onclick="scrollToHelpSection('${s.id}')">
-          <div class="help-index-dot" style="background:${s.color}"></div>
-          <span>${s.label}</span>
-          <div class="help-index-arrow"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></div>
+    <header>
+      <div class="brand">
+        <button class="back-btn" onclick="goHome()" aria-label="Volver al inicio">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="app-icon-sm help">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
         </div>
-      `).join('')}
-    </div>
+        <h1>Cómo funciona la app</h1>
+      </div>
+    </header>
 
-    ${renderHelpBienestar()}
-    ${renderHelpMedicacion()}
-    ${renderHelpEmergencia()}
-    ${renderHelpInforme()}
-    ${renderHelpNotificaciones()}
+    <div class="list" id="helpList" style="padding-bottom:40px;">
+      <div class="help-index" id="helpIndexTop">
+        ${HELP_SECTIONS.map(s => `
+          <div class="help-index-item" onclick="scrollToHelpSection('${s.id}')">
+            <div class="help-index-dot" style="background:${s.color}"></div>
+            <span>${s.label}</span>
+            <div class="help-index-arrow"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></div>
+          </div>
+        `).join('')}
+      </div>
+
+      ${renderHelpBienestar()}
+      ${renderHelpMedicacion()}
+      ${renderHelpEmergencia()}
+      ${renderHelpInforme()}
+      ${renderHelpNotificaciones()}
+    </div>
 
     <button class="help-back-top-btn" id="helpBackTopBtn" onclick="scrollToHelpTop()" aria-label="Volver al índice">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
     </button>
   `;
-  document.getElementById('helpOverlay').classList.add('show');
 
-  const sheet = document.querySelector('#helpOverlay .sheet');
-  sheet.scrollTop = 0;
-  sheet.removeEventListener('scroll', onHelpScroll);
-  sheet.addEventListener('scroll', onHelpScroll);
+  document.getElementById('helpList').addEventListener('scroll', onHelpScroll);
 }
 
 function onHelpScroll(e) {
   const btn = document.getElementById('helpBackTopBtn');
   if (!btn) return;
   btn.classList.toggle('show', e.target.scrollTop > 200);
-}
-
-function toggleHelp(show) {
-  document.getElementById('helpOverlay').classList.toggle('show', show);
 }
 
 function scrollToHelpSection(id) {
