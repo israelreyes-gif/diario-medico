@@ -31,7 +31,6 @@ function initMoodScreen() {
 
       <div id="tabPanelAnimo">
         <div id="moodSlots"></div>
-        <button class="push-toggle-btn" id="pushToggleBtn" onclick="onPushToggleClick()">Activar notificaciones de recordatorio</button>
       </div>
 
       <div id="tabPanelConstantes" class="hide">
@@ -78,6 +77,4 @@ function initMoodScreen() {
 
     </div>
   `;
-
-  actualizarEstadoBotonPush();
 }
