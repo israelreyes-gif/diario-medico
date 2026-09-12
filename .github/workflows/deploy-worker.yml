@@ -15,6 +15,10 @@ jobs:
       - name: Descargar el repositorio
         uses: actions/checkout@v4
 
+      - name: Instalar dependencias
+        run: npm install
+        working-directory: worker
+
       - name: Desplegar con Wrangler
         uses: cloudflare/wrangler-action@v3
         with:
