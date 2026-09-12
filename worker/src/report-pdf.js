@@ -27,143 +27,185 @@ export async function generarInformePdf(datos, meta) {
   const MARGEN = 50;
   const ANCHO = 595.28; // A4
   const ALTO = 841.89;
-  const COLOR_TITULO = rgb(0.12, 0.28, 0.27);
+
+  const COLOR_TEAL_DEEP = rgb(0.118, 0.278, 0.267);
+  const COLOR_TEAL = rgb(0.173, 0.373, 0.357);
   const COLOR_TEXTO = rgb(0.2, 0.19, 0.17);
   const COLOR_SUAVE = rgb(0.43, 0.42, 0.39);
   const COLOR_LINEA = rgb(0.91, 0.88, 0.83);
+  const COLOR_FONDO_SUAVE = rgb(0.98, 0.965, 0.945);
+  const COLOR_BLANCO = rgb(1, 1, 1);
+
+  const COLOR_MEDS = rgb(0.851, 0.643, 0.251);
+  const COLOR_EMERGENCIA = rgb(0.698, 0.231, 0.231);
+  const COLOR_ANIMO = rgb(0.42, 0.357, 0.584);
+  const COLOR_VITALS = COLOR_TEAL;
 
   let pagina = pdf.addPage([ANCHO, ALTO]);
   let y = ALTO - MARGEN;
+  const ANCHO_UTIL = ANCHO - MARGEN * 2;
+
+  function nuevaPagina() {
+    pagina = pdf.addPage([ANCHO, ALTO]);
+    y = ALTO - MARGEN;
+  }
 
   function nuevaPaginaSiHaceFalta(alturaNecesaria) {
-    if (y - alturaNecesaria < MARGEN) {
-      pagina = pdf.addPage([ANCHO, ALTO]);
-      y = ALTO - MARGEN;
-    }
+    if (y - alturaNecesaria < MARGEN) nuevaPagina();
   }
 
-  function escribir(texto, { tamano = 11, negrita = false, color = COLOR_TEXTO, indentacion = 0 } = {}) {
-    nuevaPaginaSiHaceFalta(tamano + 6);
-    pagina.drawText(texto, {
-      x: MARGEN + indentacion,
-      y,
-      size: tamano,
-      font: negrita ? fontBold : fontRegular,
-      color,
+  function escribir(texto, { tamano = 11, negrita = false, color = COLOR_TEXTO, x = MARGEN, avanzarY = true } = {}) {
+    pagina.drawText(texto, { x, y, size: tamano, font: negrita ? fontBold : fontRegular, color });
+    if (avanzarY) y -= tamano + 6;
+  }
+
+  // Calcula cuánto ocupará un bloque de líneas (para reservar el hueco entero antes de dibujar,
+  // y así nunca partir ni solapar un bloque entre dos páginas o entre dos escrituras).
+  function alturaBloque(numLineas, tamano = 10) {
+    return numLineas * (tamano + 6);
+  }
+
+  function tarjeta(alturaContenido, colorBarra) {
+    // Dibuja el fondo y la barra de color de una tarjeta; devuelve la Y donde empieza el
+    // contenido interior, ya con el margen aplicado.
+    const alturaTotal = alturaContenido + 16;
+    nuevaPaginaSiHaceFalta(alturaTotal + 10);
+    const yTop = y;
+    pagina.drawRectangle({
+      x: MARGEN, y: yTop - alturaTotal, width: ANCHO_UTIL, height: alturaTotal,
+      color: COLOR_FONDO_SUAVE,
     });
-    y -= tamano + 6;
-  }
-
-  function lineaSeparadora() {
-    nuevaPaginaSiHaceFalta(14);
-    pagina.drawLine({
-      start: { x: MARGEN, y },
-      end: { x: ANCHO - MARGEN, y },
-      thickness: 0.5,
-      color: COLOR_LINEA,
+    pagina.drawRectangle({
+      x: MARGEN, y: yTop - alturaTotal, width: 4, height: alturaTotal,
+      color: colorBarra,
     });
-    y -= 14;
+    y = yTop - 10;
+    return yTop - alturaTotal - 10; // límite inferior de la tarjeta, para dejar margen después
   }
 
-  function tituloSeccion(texto) {
-    nuevaPaginaSiHaceFalta(30);
-    y -= 6;
-    escribir(texto, { tamano: 15, negrita: true, color: COLOR_TITULO });
-    lineaSeparadora();
+  function cerrarTarjeta(limiteInferior) {
+    y = limiteInferior - 4;
   }
 
-  // Cabecera del documento
-  escribir("Diario médico — Informe", { tamano: 20, negrita: true, color: COLOR_TITULO });
+  function tituloSeccion(texto, colorBanda) {
+    nuevaPaginaSiHaceFalta(40);
+    y -= 4;
+    pagina.drawRectangle({ x: MARGEN, y: y - 6, width: 26, height: 16, color: colorBanda });
+    escribir(texto, { tamano: 15, negrita: true, color: COLOR_TEAL_DEEP, x: MARGEN + 34, avanzarY: false });
+    y -= 26;
+  }
+
+  // --- Cabecera de portada ---
+  pagina.drawRectangle({ x: 0, y: ALTO - 90, width: ANCHO, height: 90, color: COLOR_TEAL_DEEP });
+  pagina.drawText("Diario médico", { x: MARGEN, y: ALTO - 45, size: 22, font: fontBold, color: COLOR_BLANCO });
+  pagina.drawText("Informe de seguimiento", { x: MARGEN, y: ALTO - 68, size: 11, font: fontRegular, color: rgb(0.85, 0.85, 0.85) });
+  y = ALTO - 115;
+
   escribir(`Generado el ${meta.fechaGeneracion}`, { tamano: 9.5, color: COLOR_SUAVE });
   if (meta.rangoLabel) {
-    escribir(`Periodo: ${meta.rangoLabel}`, { tamano: 9.5, color: COLOR_SUAVE });
+    escribir(`Periodo (ánimo y constantes): ${meta.rangoLabel}`, { tamano: 9.5, color: COLOR_SUAVE });
   }
-  y -= 10;
+  y -= 12;
 
   // --- Medicación ---
   if (datos.medicacion) {
-    tituloSeccion("Medicación actual");
+    tituloSeccion("Medicación actual", COLOR_MEDS);
     if (datos.medicacion.length === 0) {
       escribir("Sin medicación registrada.", { tamano: 10.5, color: COLOR_SUAVE });
     } else {
       datos.medicacion.forEach((m) => {
-        escribir(m.nombre, { tamano: 11.5, negrita: true });
         const dosis = [];
         if (m.desayuno) dosis.push(`Desayuno: ${m.desayuno} comp`);
         if (m.comida) dosis.push(`Comida: ${m.comida} comp`);
         if (m.cena) dosis.push(`Cena: ${m.cena} comp`);
-        escribir(dosis.join('   ·   ') || 'Sin dosis indicada', { tamano: 10, color: COLOR_SUAVE, indentacion: 10 });
-        if (m.nota) escribir(`Nota: ${m.nota}`, { tamano: 9.5, color: COLOR_SUAVE, indentacion: 10 });
-        y -= 4;
+        const lineas = 1 + (dosis.length ? 1 : 0) + (m.nota ? 1 : 0);
+
+        const limite = tarjeta(alturaBloque(lineas), COLOR_MEDS);
+        escribir(m.nombre, { tamano: 11.5, negrita: true, x: MARGEN + 14 });
+        if (dosis.length) escribir(dosis.join('   ·   '), { tamano: 10, color: COLOR_SUAVE, x: MARGEN + 14 });
+        if (m.nota) escribir(`Nota: ${m.nota}`, { tamano: 9.5, color: COLOR_SUAVE, x: MARGEN + 14 });
+        cerrarTarjeta(limite);
       });
     }
-    y -= 10;
+    y -= 6;
   }
 
   // --- Ficha de emergencia ---
   if (datos.emergencia !== undefined) {
-    tituloSeccion("Ficha de emergencia");
+    tituloSeccion("Ficha de emergencia", COLOR_EMERGENCIA);
     const e = datos.emergencia;
     if (!e) {
       escribir("Sin ficha de emergencia registrada.", { tamano: 10.5, color: COLOR_SUAVE });
     } else {
-      escribir(`Grupo sanguíneo: ${e.grupoSanguineo || "No indicado"}`, { tamano: 10.5 });
-      escribir(`Alergias: ${e.alergias.length ? e.alergias.join(', ') : 'Ninguna'}`, { tamano: 10.5 });
-      escribir(`Enfermedades: ${e.enfermedades.length ? e.enfermedades.join(', ') : 'Ninguna'}`, { tamano: 10.5 });
-      y -= 4;
+      const contactosPersonales = e.contactos.personales || [];
+      const contactosMedicos = e.contactos.medicos || [];
+      const lineas = 3
+        + (contactosPersonales.length ? 1 + contactosPersonales.length : 0)
+        + (contactosMedicos.length ? 1 + contactosMedicos.length : 0);
 
-      if (e.contactos.personales?.length) {
-        escribir("Contactos personales:", { tamano: 10.5, negrita: true });
-        e.contactos.personales.forEach((c) => {
-          escribir(`${c.nombre} — ${c.telefono}`, { tamano: 10, color: COLOR_SUAVE, indentacion: 10 });
+      const limite = tarjeta(alturaBloque(lineas), COLOR_EMERGENCIA);
+      escribir(`Grupo sanguíneo: ${e.grupoSanguineo || "No indicado"}`, { tamano: 10.5, x: MARGEN + 14 });
+      escribir(`Alergias: ${e.alergias.length ? e.alergias.join(', ') : 'Ninguna'}`, { tamano: 10.5, x: MARGEN + 14 });
+      escribir(`Enfermedades: ${e.enfermedades.length ? e.enfermedades.join(', ') : 'Ninguna'}`, { tamano: 10.5, x: MARGEN + 14 });
+
+      if (contactosPersonales.length) {
+        escribir("Contactos personales:", { tamano: 10.5, negrita: true, x: MARGEN + 14 });
+        contactosPersonales.forEach((c) => {
+          escribir(`${c.nombre} — ${c.telefono}`, { tamano: 10, color: COLOR_SUAVE, x: MARGEN + 24 });
         });
       }
-      if (e.contactos.medicos?.length) {
-        escribir("Contactos médicos:", { tamano: 10.5, negrita: true });
-        e.contactos.medicos.forEach((c) => {
-          escribir(`${c.nombre} (${c.especialidad || 'Sin especialidad'}) — ${c.telefono}`, { tamano: 10, color: COLOR_SUAVE, indentacion: 10 });
+      if (contactosMedicos.length) {
+        escribir("Contactos médicos:", { tamano: 10.5, negrita: true, x: MARGEN + 14 });
+        contactosMedicos.forEach((c) => {
+          escribir(`${c.nombre} (${c.especialidad || 'Sin especialidad'}) — ${c.telefono}`, { tamano: 10, color: COLOR_SUAVE, x: MARGEN + 24 });
         });
       }
+      cerrarTarjeta(limite);
     }
-    y -= 10;
+    y -= 6;
   }
 
   // --- Estado de ánimo, agrupado por día ---
   if (datos.animo) {
-    tituloSeccion("Estado de ánimo");
+    tituloSeccion("Estado de ánimo", COLOR_ANIMO);
     if (datos.animo.length === 0) {
       escribir("Sin registros en este periodo.", { tamano: 10.5, color: COLOR_SUAVE });
     } else {
       datos.animo.forEach((dia) => {
-        nuevaPaginaSiHaceFalta(40);
-        escribir(dia.fecha, { tamano: 11.5, negrita: true, color: COLOR_TITULO });
+        const lineas = 1 + dia.registros.length + (dia.comentario ? 1 : 0);
+        const limite = tarjeta(alturaBloque(lineas), COLOR_ANIMO);
+
+        escribir(dia.fecha, { tamano: 11.5, negrita: true, color: COLOR_TEAL_DEEP, x: MARGEN + 14 });
         dia.registros.forEach((r) => {
           const label = EMOCIONES_LABEL[r.emocion] || r.emocion;
-          escribir(`${r.hora}  ·  ${label}  ·  Intensidad ${r.intensidad}/5`, { tamano: 10, indentacion: 10 });
+          escribir(`${r.hora}  ·  ${label}  ·  Intensidad ${r.intensidad}/5`, { tamano: 10, x: MARGEN + 24 });
         });
         if (dia.comentario) {
-          escribir(`Comentario: ${dia.comentario}`, { tamano: 9.5, color: COLOR_SUAVE, indentacion: 10 });
+          escribir(`Comentario: ${dia.comentario}`, { tamano: 9.5, color: COLOR_SUAVE, x: MARGEN + 24 });
         }
-        y -= 8;
+        cerrarTarjeta(limite);
       });
     }
-    y -= 10;
+    y -= 6;
   }
 
   // --- Constantes vitales, agrupadas por tipo ---
   if (datos.constantes) {
-    tituloSeccion("Constantes vitales");
+    tituloSeccion("Constantes vitales", COLOR_VITALS);
     const tipos = Object.keys(datos.constantes);
     if (tipos.length === 0) {
       escribir("Sin registros en este periodo.", { tamano: 10.5, color: COLOR_SUAVE });
     } else {
       tipos.forEach((tipo) => {
-        nuevaPaginaSiHaceFalta(30);
-        escribir(TIPOS_VITAL_LABEL[tipo] || tipo, { tamano: 11.5, negrita: true, color: COLOR_TITULO });
-        datos.constantes[tipo].forEach((r) => {
-          escribir(`${r.fecha}  ${r.hora}  ·  ${formatVitalValor(tipo, r.valor)}`, { tamano: 10, indentacion: 10 });
+        const registros = datos.constantes[tipo];
+        const lineas = 1 + registros.length;
+        const limite = tarjeta(alturaBloque(lineas), COLOR_VITALS);
+
+        escribir(TIPOS_VITAL_LABEL[tipo] || tipo, { tamano: 11.5, negrita: true, color: COLOR_TEAL_DEEP, x: MARGEN + 14 });
+        registros.forEach((r) => {
+          escribir(`${r.fecha}  ${r.hora}  ·  ${formatVitalValor(tipo, r.valor)}`, { tamano: 10, x: MARGEN + 24 });
         });
-        y -= 8;
+        cerrarTarjeta(limite);
       });
     }
   }
@@ -171,11 +213,12 @@ export async function generarInformePdf(datos, meta) {
   // Pie de página con aviso, en todas las páginas
   const paginas = pdf.getPages();
   paginas.forEach((p, i) => {
+    p.drawLine({ start: { x: MARGEN, y: 38 }, end: { x: ANCHO - MARGEN, y: 38 }, thickness: 0.5, color: COLOR_LINEA });
     p.drawText(
       "Informe generado por la app Diario médico a partir de datos de autoseguimiento. No sustituye un informe clínico.",
-      { x: MARGEN, y: 25, size: 7.5, font: fontRegular, color: COLOR_SUAVE }
+      { x: MARGEN, y: 24, size: 7.5, font: fontRegular, color: COLOR_SUAVE }
     );
-    p.drawText(`${i + 1} / ${paginas.length}`, { x: ANCHO - MARGEN - 30, y: 25, size: 7.5, font: fontRegular, color: COLOR_SUAVE });
+    p.drawText(`${i + 1} / ${paginas.length}`, { x: ANCHO - MARGEN - 30, y: 24, size: 7.5, font: fontRegular, color: COLOR_SUAVE });
   });
 
   return pdf.save();
