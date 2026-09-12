@@ -1,7 +1,6 @@
 // Registro de hoy: lista de entradas libres (sin franjas), añadir y eliminar (deslizando a la izquierda)
 
 let registrosHoy = [];
-let registroEditandoId = null;
 let nuevoRegistroDraft = { emotion: null, level: null };
 
 async function loadMoodToday() {
@@ -62,7 +61,6 @@ function renderRegistrosHoy() {
 }
 
 function abrirNuevoRegistro() {
-  registroEditandoId = null;
   nuevoRegistroDraft = { emotion: null, level: null };
   document.getElementById('registroFormTitle').textContent = 'Nuevo registro';
   document.getElementById('registroFormHora').value = new Date().toTimeString().slice(0, 5);
