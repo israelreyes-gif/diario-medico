@@ -1,6 +1,7 @@
-// Notificaciones push: pedir permiso, suscribir/desuscribir el dispositivo, registrar el Service Worker.
+// Notificaciones push: pedir permiso, suscribir/desuscribir el dispositivo.
 // La tarjeta vive en la pantalla de inicio y siempre está visible, mostrando "Activar" o
 // "Notificaciones activadas" (con opción de desactivar) según el estado actual.
+// El registro del propio Service Worker se hace en index.html al cargar la página.
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -11,11 +12,6 @@ function urlBase64ToUint8Array(base64String) {
 
 async function pushSoportado() {
   return 'serviceWorker' in navigator && 'PushManager' in window;
-}
-
-async function registrarServiceWorker() {
-  if (!('serviceWorker' in navigator)) return null;
-  return navigator.serviceWorker.register('sw.js');
 }
 
 async function getPushSubscriptionActual() {
