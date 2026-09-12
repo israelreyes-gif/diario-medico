@@ -21,6 +21,7 @@ import {
 } from "./vitals.js";
 import { handleGetPushPublicKey, handleSuscribirPush, handleDesuscribirPush } from "./push.js";
 import { handleScheduled } from "./scheduled.js";
+import { handleGenerarInformePdf } from "./report.js";
 
 export default {
   async fetch(request, env) {
@@ -138,6 +139,10 @@ export default {
 
       if (url.pathname === "/push-desuscribir" && request.method === "POST") {
         return await handleDesuscribirPush(request, env, usuarioId);
+      }
+
+      if (url.pathname === "/informe-pdf" && request.method === "POST") {
+        return await handleGenerarInformePdf(request, env, usuarioId);
       }
 
       return json({ error: "Ruta no encontrada" }, 404);
