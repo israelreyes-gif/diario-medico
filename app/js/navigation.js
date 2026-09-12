@@ -1,10 +1,11 @@
-// Cambia entre las pantallas principales: inicio, ánimo, pastillero, ficha de emergencia
+// Cambia entre las pantallas principales: inicio, bienestar, pastillero, ficha de emergencia
 
 function goHome() {
   document.getElementById('moodScreen').style.display = 'none';
   document.getElementById('medsScreen').style.display = 'none';
   document.getElementById('emergencyScreen').style.display = 'none';
   document.getElementById('homeScreen').style.display = 'flex';
+  updateHomePushTask();
 }
 
 function goToMood() {
