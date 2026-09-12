@@ -3,6 +3,7 @@
 initMoodScreen();
 initMedsScreen();
 initEmergencyScreen();
+initHelpScreen();
 renderHomeCards();
 
 document.getElementById('formOverlay').addEventListener('click', e => { if (e.target.id === 'formOverlay') closeForm(); });
@@ -10,7 +11,9 @@ document.getElementById('historyOverlay').addEventListener('click', e => { if (e
 document.getElementById('infoOverlay').addEventListener('click', e => { if (e.target.id === 'infoOverlay') toggleInfo(false); });
 document.getElementById('moodSummaryOverlay').addEventListener('click', e => { if (e.target.id === 'moodSummaryOverlay') toggleMoodSummary(false); });
 document.getElementById('registroFormOverlay').addEventListener('click', e => { if (e.target.id === 'registroFormOverlay') cerrarRegistroForm(); });
+document.getElementById('vitalFormOverlay').addEventListener('click', e => { if (e.target.id === 'vitalFormOverlay') cerrarVitalForm(); });
 document.getElementById('dayDetailOverlay').addEventListener('click', e => { if (e.target.id === 'dayDetailOverlay') toggleDayDetail(false); });
+document.getElementById('reportFormOverlay').addEventListener('click', e => { if (e.target.id === 'reportFormOverlay') closeReportForm(); });
 
 initAutocomplete();
 
