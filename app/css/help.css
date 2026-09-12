@@ -1,0 +1,85 @@
+.help-index{ display:flex; flex-direction:column; gap:8px; margin-bottom:24px; }
+.help-index-item{
+  display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:14px;
+  background:var(--paper); border:1px solid var(--line); cursor:pointer;
+}
+.help-index-dot{ width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.help-index-item span{ font-size:13.5px; font-weight:600; }
+.help-index-arrow{ margin-left:auto; }
+.help-index-arrow svg{ width:14px; height:14px; stroke:var(--ink-soft); }
+
+.help-section{ margin-bottom:34px; scroll-margin-top:16px; }
+.help-section-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.help-section-icon{
+  width:32px; height:32px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.help-section-icon svg{ width:16px; height:16px; }
+.help-section-title{ font-family:'Fraunces', serif; font-size:16px; font-weight:600; }
+
+.help-text{ font-size:13px; line-height:1.55; color:var(--ink); margin:0 0 6px; }
+.help-text b{ color:var(--ink); }
+
+.help-mock{
+  background:var(--cream); border:1px solid var(--line); border-radius:16px;
+  padding:16px; margin:12px 0;
+}
+
+.help-num{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:17px; height:17px; border-radius:50%; background:var(--teal-deep); color:white;
+  font-size:10px; font-weight:700; flex-shrink:0; margin-right:4px;
+}
+.help-legend{ margin-top:10px; display:flex; flex-direction:column; gap:5px; }
+.help-legend-row{ display:flex; align-items:flex-start; gap:6px; font-size:11.5px; color:var(--ink-soft); line-height:1.4; }
+
+/* Mockup: Bienestar */
+.help-mock-tabs{ display:flex; gap:6px; margin-bottom:10px; }
+.help-mock-tab{ flex:1; padding:7px; border-radius:9px; border:1px solid var(--line); background:var(--paper); font-size:10.5px; font-weight:600; text-align:center; color:var(--ink-soft); }
+.help-mock-tab.active{ background:var(--dusk-deep); color:white; border-color:var(--dusk-deep); }
+.help-mock-emo-row{ display:flex; align-items:center; gap:8px; background:var(--paper); border:1px solid var(--line); border-radius:11px; padding:9px 10px; margin-bottom:8px; }
+.help-mock-emo-row span.emo{ font-size:15px; }
+.help-mock-emo-row span.txt{ font-size:11px; font-weight:600; flex:1; }
+.help-mock-add-btn{
+  border:1.5px dashed var(--teal-deep); border-radius:10px; padding:8px; text-align:center;
+  font-size:10.5px; font-weight:600; color:var(--teal-deep); position:relative;
+}
+.help-mock-cal-row{ display:flex; gap:5px; margin-top:10px; }
+.help-mock-cal-day{
+  flex:1; aspect-ratio:1; border-radius:7px; background:var(--paper); border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:9px; position:relative;
+}
+.help-mock-cal-day .d{ width:5px; height:5px; border-radius:50%; position:absolute; bottom:3px; }
+
+/* Mockup: Medicación */
+.help-mock-med-card{ background:var(--paper); border:1px solid var(--line); border-radius:13px; padding:11px; position:relative; }
+.help-mock-med-name{ font-size:12px; font-weight:700; margin-bottom:6px; }
+.help-mock-dose-row{ display:flex; gap:5px; }
+.help-mock-dose-chip{ flex:1; background:var(--cream); border-radius:8px; padding:5px 6px; font-size:8.5px; text-align:center; }
+.help-mock-fab{
+  width:30px; height:30px; border-radius:50%; background:var(--teal-deep); color:white;
+  display:flex; align-items:center; justify-content:center; font-size:15px; position:absolute; right:-6px; bottom:-30px;
+}
+
+/* Mockup: Emergencia */
+.help-mock-blood-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin-bottom:10px; }
+.help-mock-blood-chip{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:7px 0; text-align:center; font-size:10px; font-weight:700; }
+.help-mock-blood-chip.sel{ background:var(--danger); color:white; border-color:var(--danger); }
+.help-mock-contact{ background:var(--paper); border:1px solid var(--line); border-radius:11px; padding:9px 10px; font-size:10.5px; display:flex; justify-content:space-between; align-items:center; }
+
+/* Mockup: Exportar informe */
+.help-mock-check-row{ display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--line); font-size:11px; }
+.help-mock-check-row:last-child{ border-bottom:none; }
+.help-mock-checkbox{ width:14px; height:14px; border-radius:4px; background:var(--teal-deep); flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.help-mock-checkbox svg{ width:9px; height:9px; stroke:white; }
+.help-mock-range{ display:flex; gap:6px; margin-top:10px; }
+.help-mock-range div{ flex:1; background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:6px 8px; font-size:9.5px; color:var(--ink-soft); }
+.help-mock-gen-btn{ margin-top:10px; background:var(--teal-deep); color:white; border-radius:10px; padding:9px; text-align:center; font-size:10.5px; font-weight:700; }
+
+/* Mockup: Notificaciones */
+.help-mock-notif-card{ display:flex; align-items:center; gap:10px; background:var(--paper); border:1px solid var(--line); border-radius:13px; padding:11px; }
+.help-mock-notif-icon{ width:30px; height:30px; border-radius:9px; background:linear-gradient(155deg, var(--dusk) 0%, var(--dusk-deep) 100%); flex-shrink:0; }
+.help-mock-notif-text{ flex:1; }
+.help-mock-notif-text .t{ font-size:10.5px; font-weight:700; }
+.help-mock-notif-text .s{ font-size:9px; color:var(--ink-soft); margin-top:2px; }
+.help-mock-notif-btn{ background:var(--dusk-deep); color:white; border-radius:8px; padding:6px 10px; font-size:9.5px; font-weight:700; white-space:nowrap; }
