@@ -1,4 +1,7 @@
-// Notificaciones push: pedir permiso, suscribir el dispositivo, registrar el Service Worker
+// Notificaciones push: pedir permiso, suscribir el dispositivo, registrar el Service Worker.
+// La tarjeta de "tarea pendiente" se muestra en la pantalla de inicio, no dentro de Bienestar.
+
+const PUSH_TASK_DISMISSED_KEY = 'diario_medico_push_task_dismissed';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -67,33 +70,67 @@ async function activarNotificacionesPush() {
   }
 }
 
-async function actualizarEstadoBotonPush() {
-  const btn = document.getElementById('pushToggleBtn');
-  if (!btn) return;
+function isPushTaskDismissed() {
+  return localStorage.getItem(PUSH_TASK_DISMISSED_KEY) === '1';
+}
+
+function dismissPushTask() {
+  localStorage.setItem(PUSH_TASK_DISMISSED_KEY, '1');
+  updateHomePushTask();
+}
+
+// Pinta (o esconde) la tarjeta de tarea pendiente en la pantalla de inicio, según:
+// - si el dispositivo soporta push
+// - si el usuario ya la descartó con la X
+// - si las notificaciones ya están activas (en ese caso, deja de ser una tarea pendiente)
+async function updateHomePushTask() {
+  const contenedor = document.getElementById('homeTaskArea');
+  if (!contenedor) return;
+
+  if (isPushTaskDismissed()) {
+    contenedor.innerHTML = '';
+    return;
+  }
 
   if (!(await pushSoportado())) {
-    btn.textContent = 'Notificaciones no disponibles en este dispositivo';
-    btn.disabled = true;
+    contenedor.innerHTML = '';
     return;
   }
 
   const suscripcion = await getPushSubscriptionActual();
-  if (suscripcion && Notification.permission === 'granted') {
-    btn.textContent = '🔔 Notificaciones activadas';
-    btn.classList.add('active');
-  } else {
-    btn.textContent = 'Activar notificaciones de recordatorio';
-    btn.classList.remove('active');
+  const yaActivas = suscripcion && Notification.permission === 'granted';
+
+  if (yaActivas) {
+    contenedor.innerHTML = '';
+    return;
   }
+
+  contenedor.innerHTML = `
+    <div class="home-task-title">Tareas pendientes</div>
+    <div class="home-task-card">
+      <div class="home-task-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </div>
+      <div class="home-task-text">
+        <h4>Activar notificaciones</h4>
+        <p>Recibe un recordatorio al empezar mañana, tarde y noche para registrar tu ánimo</p>
+      </div>
+      <div class="home-task-actions">
+        <button class="home-task-btn" onclick="onHomeActivatePush()">Activar</button>
+        <button class="home-task-dismiss" onclick="dismissPushTask()" aria-label="Descartar">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+  `;
 }
 
-async function onPushToggleClick() {
-  const btn = document.getElementById('pushToggleBtn');
-  btn.disabled = true;
+async function onHomeActivatePush() {
   const ok = await activarNotificacionesPush();
-  btn.disabled = false;
+  await updateHomePushTask();
   if (ok) {
-    await actualizarEstadoBotonPush();
     alert('Notificaciones activadas. Te avisaremos al empezar cada franja (mañana, tarde y noche) si no has registrado tu estado.');
   }
 }
