@@ -42,6 +42,10 @@ function goToHelp() {
   document.getElementById('medsScreen').style.display = 'none';
   document.getElementById('emergencyScreen').style.display = 'none';
   document.getElementById('helpScreen').style.display = 'flex';
-  document.getElementById('helpList').scrollTop = 0;
-  document.getElementById('helpBackTopBtn').classList.remove('show');
+
+  const list = document.getElementById('helpList');
+  if (list) list.scrollTop = 0;
+
+  const btn = document.getElementById('helpBackTopBtn');
+  if (btn) btn.classList.remove('show');
 }
