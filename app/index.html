@@ -96,6 +96,9 @@
 <!-- EMERGENCY SCREEN (contenido generado por js/emergency.js) -->
 <div class="device" id="emergencyScreen" style="display:none;"></div>
 
+<!-- HELP SCREEN (contenido generado por js/help.js) -->
+<div class="device" id="helpScreen" style="display:none;"></div>
+
 <!-- FORM SHEET -->
 <div class="overlay" id="formOverlay">
   <div class="sheet">
@@ -316,22 +319,6 @@
       </div>
 
       <button class="save-btn" id="reportGenerateBtn" style="margin-top:18px;" onclick="generarInformePdf()">Generar y descargar PDF</button>
-    </div>
-  </div>
-</div>
-
-<!-- HELP SHEET -->
-<div class="overlay" id="helpOverlay">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="info-header">
-      <h3>Cómo funciona la app</h3>
-      <button class="info-close" onclick="toggleHelp(false)" aria-label="Cerrar">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <div class="sheet-body">
-      <div id="helpContent">Cargando...</div>
     </div>
   </div>
 </div>
