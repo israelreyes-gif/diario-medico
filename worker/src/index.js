@@ -13,6 +13,12 @@ import {
   handleGetComentarioDia,
   handlePostComentarioDia,
 } from "./mood.js";
+import {
+  handleGetVitalsDia,
+  handleCrearVital,
+  handleBorrarVital,
+  handleGetVitalsMes,
+} from "./vitals.js";
 import { handleGetPushPublicKey, handleSuscribirPush, handleDesuscribirPush } from "./push.js";
 import { handleScheduled } from "./scheduled.js";
 
@@ -107,6 +113,23 @@ export default {
 
       if (url.pathname === "/animo-comentario" && request.method === "POST") {
         return await handlePostComentarioDia(request, env, usuarioId);
+      }
+
+      if (url.pathname === "/vitals-dia" && request.method === "GET") {
+        return await handleGetVitalsDia(request, env, usuarioId);
+      }
+
+      if (url.pathname === "/vitals-registro" && request.method === "POST") {
+        return await handleCrearVital(request, env, usuarioId);
+      }
+
+      if (url.pathname.startsWith("/vitals-registro/") && request.method === "DELETE") {
+        const vitalId = url.pathname.split("/")[2];
+        return await handleBorrarVital(env, usuarioId, vitalId);
+      }
+
+      if (url.pathname === "/vitals-mes" && request.method === "GET") {
+        return await handleGetVitalsMes(request, env, usuarioId);
       }
 
       if (url.pathname === "/push-suscribir" && request.method === "POST") {
