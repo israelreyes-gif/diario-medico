@@ -228,6 +228,32 @@
   </div>
 </div>
 
+<!-- VITAL FORM SHEET -->
+<div class="overlay" id="vitalFormOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="info-header">
+      <h3>Nueva constante</h3>
+      <button class="info-close" onclick="cerrarVitalForm()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <div class="field">
+        <label>Hora</label>
+        <input id="vitalFormHora" type="time">
+      </div>
+
+      <div class="intensity-label">Tipo</div>
+      <div class="emotion-grid" id="vitalFormTipos"></div>
+
+      <div id="vitalFormCampos"></div>
+
+      <button class="save-btn" id="vitalFormSaveBtn" style="margin-top:16px;" onclick="guardarVital()">Guardar constante</button>
+    </div>
+  </div>
+</div>
+
 <!-- DAY DETAIL SHEET -->
 <div class="overlay" id="dayDetailOverlay">
   <div class="sheet">
@@ -252,6 +278,7 @@
 <script src="js/emergency.js"></script>
 <script src="js/mood-shared.js"></script>
 <script src="js/mood-today.js"></script>
+<script src="js/vitals-today.js"></script>
 <script src="js/mood-calendar.js"></script>
 <script src="js/mood-summary.js"></script>
 <script src="js/mood-day-detail.js"></script>
