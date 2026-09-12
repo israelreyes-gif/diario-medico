@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="css/history.css">
 <link rel="stylesheet" href="css/emergency.css">
 <link rel="stylesheet" href="css/mood.css">
+<link rel="stylesheet" href="css/help.css">
 <title>Diario médico</title>
 </head>
 <body>
@@ -319,6 +320,22 @@
   </div>
 </div>
 
+<!-- HELP SHEET -->
+<div class="overlay" id="helpOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="info-header">
+      <h3>Cómo funciona la app</h3>
+      <button class="info-close" onclick="toggleHelp(false)" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <div id="helpContent">Cargando...</div>
+    </div>
+  </div>
+</div>
+
 <script src="js/state.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/medications.js"></script>
@@ -335,6 +352,7 @@
 <script src="js/mood.js"></script>
 <script src="js/push.js"></script>
 <script src="js/report.js"></script>
+<script src="js/help.js"></script>
 <script src="js/home.js"></script>
 <script src="js/navigation.js"></script>
 <script src="js/app.js"></script>
