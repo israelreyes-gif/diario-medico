@@ -270,6 +270,55 @@
   </div>
 </div>
 
+<!-- REPORT FORM SHEET -->
+<div class="overlay" id="reportFormOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="info-header">
+      <h3>Exportar informe</h3>
+      <button class="info-close" onclick="closeReportForm()" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <div class="intensity-label">Secciones a incluir</div>
+
+      <div class="report-check-row">
+        <input type="checkbox" id="reportSecMedicacion">
+        <label for="reportSecMedicacion">Medicación actual</label>
+      </div>
+      <div class="report-check-row">
+        <input type="checkbox" id="reportSecEmergencia">
+        <label for="reportSecEmergencia">Ficha de emergencia</label>
+      </div>
+      <div class="report-check-row">
+        <input type="checkbox" id="reportSecAnimo" onchange="updateReportRangeVisibility()">
+        <label for="reportSecAnimo">Estado de ánimo</label>
+      </div>
+      <div class="report-check-row">
+        <input type="checkbox" id="reportSecConstantes" onchange="updateReportRangeVisibility()">
+        <label for="reportSecConstantes">Constantes vitales</label>
+      </div>
+
+      <div id="reportRangeBlock" style="margin-top:16px;">
+        <div class="intensity-label">Rango de fechas (ánimo y constantes)</div>
+        <div class="report-range-grid">
+          <div class="field" style="margin-bottom:0;">
+            <label>Desde</label>
+            <input id="reportInicio" type="date">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label>Hasta</label>
+            <input id="reportFin" type="date">
+          </div>
+        </div>
+      </div>
+
+      <button class="save-btn" id="reportGenerateBtn" style="margin-top:18px;" onclick="generarInformePdf()">Generar y descargar PDF</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/state.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/medications.js"></script>
@@ -285,6 +334,7 @@
 <script src="js/mood-tabs.js"></script>
 <script src="js/mood.js"></script>
 <script src="js/push.js"></script>
+<script src="js/report.js"></script>
 <script src="js/home.js"></script>
 <script src="js/navigation.js"></script>
 <script src="js/app.js"></script>
