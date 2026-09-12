@@ -1,7 +1,6 @@
-// Notificaciones push: pedir permiso, suscribir el dispositivo, registrar el Service Worker.
-// La tarjeta de "tarea pendiente" se muestra en la pantalla de inicio, no dentro de Bienestar.
-
-const PUSH_TASK_DISMISSED_KEY = 'diario_medico_push_task_dismissed';
+// Notificaciones push: pedir permiso, suscribir/desuscribir el dispositivo, registrar el Service Worker.
+// La tarjeta vive en la pantalla de inicio y siempre está visible, mostrando "Activar" o
+// "Notificaciones activadas" (con opción de desactivar) según el estado actual.
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -70,59 +69,65 @@ async function activarNotificacionesPush() {
   }
 }
 
-function isPushTaskDismissed() {
-  return localStorage.getItem(PUSH_TASK_DISMISSED_KEY) === '1';
+async function desactivarNotificacionesPush() {
+  try {
+    const suscripcion = await getPushSubscriptionActual();
+    if (suscripcion) {
+      const endpoint = suscripcion.endpoint;
+      await suscripcion.unsubscribe();
+      await apiFetch('/push-desuscribir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint }),
+      });
+    }
+    return true;
+  } catch (err) {
+    alert('No se pudieron desactivar las notificaciones: ' + err.message);
+    return false;
+  }
 }
 
-function dismissPushTask() {
-  localStorage.setItem(PUSH_TASK_DISMISSED_KEY, '1');
-  updateHomePushTask();
-}
-
-// Pinta (o esconde) la tarjeta de tarea pendiente en la pantalla de inicio, según:
-// - si el dispositivo soporta push
-// - si el usuario ya la descartó con la X
-// - si las notificaciones ya están activas (en ese caso, deja de ser una tarea pendiente)
+// Pinta la tarjeta de notificaciones en la pantalla de inicio, siempre visible,
+// con el aspecto que corresponda según si están activas o no.
 async function updateHomePushTask() {
   const contenedor = document.getElementById('homeTaskArea');
   if (!contenedor) return;
 
-  if (isPushTaskDismissed()) {
-    contenedor.innerHTML = '';
-    return;
-  }
-
   if (!(await pushSoportado())) {
-    contenedor.innerHTML = '';
+    contenedor.innerHTML = `
+      <div class="home-task-title">Notificaciones</div>
+      <div class="home-task-card">
+        <div class="home-task-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </div>
+        <div class="home-task-text">
+          <h4>No disponibles en este dispositivo</h4>
+          <p>Instala la app en la pantalla de inicio desde Safari, con iOS 16.4 o superior</p>
+        </div>
+      </div>
+    `;
     return;
   }
 
   const suscripcion = await getPushSubscriptionActual();
-  const yaActivas = suscripcion && Notification.permission === 'granted';
-
-  if (yaActivas) {
-    contenedor.innerHTML = '';
-    return;
-  }
+  const activas = suscripcion && Notification.permission === 'granted';
 
   contenedor.innerHTML = `
-    <div class="home-task-title">Tareas pendientes</div>
+    <div class="home-task-title">Notificaciones</div>
     <div class="home-task-card">
-      <div class="home-task-icon">
+      <div class="home-task-icon ${activas ? 'on' : ''}">
         <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
       </div>
       <div class="home-task-text">
-        <h4>Activar notificaciones</h4>
-        <p>Recibe un recordatorio al empezar mañana, tarde y noche para registrar tu ánimo</p>
+        <h4>${activas ? 'Notificaciones activadas' : 'Activar notificaciones'}</h4>
+        <p>${activas ? 'Te avisamos al empezar mañana, tarde y noche' : 'Recibe un recordatorio para registrar tu ánimo'}</p>
       </div>
-      <div class="home-task-actions">
-        <button class="home-task-btn" onclick="onHomeActivatePush()">Activar</button>
-        <button class="home-task-dismiss" onclick="dismissPushTask()" aria-label="Descartar">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
-        </button>
-      </div>
+      <button class="home-task-btn ${activas ? 'off' : ''}" onclick="${activas ? 'onHomeDeactivatePush()' : 'onHomeActivatePush()'}">${activas ? 'Desactivar' : 'Activar'}</button>
     </div>
   `;
 }
@@ -133,4 +138,11 @@ async function onHomeActivatePush() {
   if (ok) {
     alert('Notificaciones activadas. Te avisaremos al empezar cada franja (mañana, tarde y noche) si no has registrado tu estado.');
   }
+}
+
+async function onHomeDeactivatePush() {
+  const confirmado = confirm('¿Desactivar las notificaciones de recordatorio?');
+  if (!confirmado) return;
+  await desactivarNotificacionesPush();
+  await updateHomePushTask();
 }
