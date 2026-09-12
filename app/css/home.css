@@ -23,6 +23,7 @@
 .home-card-icon.mood{ background:linear-gradient(155deg, var(--dusk) 0%, var(--dusk-deep) 100%); }
 .home-card-icon.meds{ background:linear-gradient(155deg, var(--dawn) 0%, #B9832E 100%); }
 .home-card-icon.emergency{ background:linear-gradient(155deg, #C9615B 0%, var(--danger) 100%); }
+.home-card-icon.report{ background:linear-gradient(155deg, var(--teal) 0%, var(--teal-deep) 100%); }
 .home-card-text{ flex:1; }
 .home-card-text h3{ font-family:'Fraunces', serif; font-size:16.5px; font-weight:600; margin:0 0 3px; }
 .home-card-text p{ font-size:12.5px; color:var(--ink-soft); margin:0; }
@@ -57,3 +58,12 @@
   font-size:11.5px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0;
 }
 .home-task-btn.off{ background:var(--paper); border:1.5px solid var(--line); color:var(--danger); }
+
+/* Hoja de exportar informe */
+.report-check-row{
+  display:flex; align-items:center; gap:10px; padding:11px 2px; border-bottom:1px solid var(--line);
+}
+.report-check-row:last-of-type{ border-bottom:none; }
+.report-check-row input[type="checkbox"]{ width:19px; height:19px; accent-color:var(--teal-deep); flex-shrink:0; }
+.report-check-row label{ font-size:14px; font-weight:500; flex:1; }
+.report-range-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px; }
