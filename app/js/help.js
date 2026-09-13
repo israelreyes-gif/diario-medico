@@ -361,22 +361,39 @@ function renderHelpNotificaciones() {
   return `
     <div class="help-section" id="help-notificaciones">
       ${helpSectionHead('<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>', 'var(--dusk)', 'Notificaciones')}
-      <p class="help-text">Desde la pantalla de inicio puedes activar recordatorios para registrar tu ánimo tres veces al día (<b>mañana, tarde y noche</b>), calculados siempre en hora de Madrid.</p>
+      <p class="help-text">Desde la pantalla de inicio puedes configurar recordatorios para registrar tu ánimo, con una franja de <b>mañana, tarde y noche</b> totalmente independientes entre sí.</p>
 
-      <div class="help-subtitle">Activarlas</div>
+      <div class="help-subtitle">Configurar cada franja</div>
+      <p class="help-text">Cada franja tiene su propio interruptor y su propia hora en punto — puedes activar solo la que te interese, o las tres, cada una a la hora que prefieras:</p>
+
       <div class="help-mock">
-        <div class="help-mock-notif-card">
-          <div class="help-mock-notif-icon off"></div>
-          <div class="help-mock-notif-text">
-            <div class="t">Activar notificaciones</div>
-            <div class="s">Recibe un recordatorio para registrar tu ánimo</div>
-          </div>
-          <div class="help-mock-notif-btn">Activar <span class="help-num">1</span></div>
+        <div class="help-mock-notif-franja-row">
+          <span class="n">Mañana</span>
+          <span class="help-mock-notif-select">08:00</span>
+          <div class="help-mock-notif-switch on"><span class="knob"></span></div>
+          <span class="help-num">1</span>
+        </div>
+        <div class="help-mock-notif-franja-row">
+          <span class="n">Tarde</span>
+          <span class="help-mock-notif-select">15:00</span>
+          <div class="help-mock-notif-switch"><span class="knob"></span></div>
+          <span class="help-num">2</span>
+        </div>
+        <div class="help-mock-notif-franja-row">
+          <span class="n">Noche</span>
+          <span class="help-mock-notif-select">21:00</span>
+          <div class="help-mock-notif-switch on"><span class="knob"></span></div>
         </div>
         <div class="help-legend">
-          <div class="help-legend-row"><span class="help-num">1</span>Al tocar "Activar", el sistema del móvil te pedirá confirmación una sola vez.</div>
+          <div class="help-legend-row"><span class="help-num">1</span>El interruptor activa o desactiva esa franja de forma independiente.</div>
+          <div class="help-legend-row"><span class="help-num">2</span>El selector de hora solo se puede tocar si la franja está activada; elige cualquier hora en punto del día.</div>
         </div>
       </div>
+
+      <p class="help-text">Pulsa <b>"Guardar horarios"</b> al terminar. Si no activas ninguna franja, no recibirás ningún recordatorio — por defecto, las tres empiezan desactivadas.</p>
+
+      <div class="help-subtitle">Permiso del sistema</div>
+      <p class="help-text">La primera vez que actives alguna franja, el sistema del móvil te pedirá confirmación una sola vez:</p>
 
       <div class="help-mock">
         <div class="help-mock-system-dialog">
@@ -392,24 +409,7 @@ function renderHelpNotificaciones() {
         </div>
       </div>
 
-      <div class="help-subtitle">Ya activadas</div>
-      <p class="help-text">Una vez activas, la tarjeta cambia de aspecto y puedes desactivarlas en cualquier momento desde el mismo sitio:</p>
-
-      <div class="help-mock">
-        <div class="help-mock-notif-card">
-          <div class="help-mock-notif-icon"></div>
-          <div class="help-mock-notif-text">
-            <div class="t">Notificaciones activadas</div>
-            <div class="s">Te avisamos al empezar mañana, tarde y noche</div>
-          </div>
-          <div class="help-mock-notif-btn off">Desactivar <span class="help-num">1</span></div>
-        </div>
-        <div class="help-legend">
-          <div class="help-legend-row"><span class="help-num">1</span>Toca "Desactivar" siempre que quieras dejar de recibirlas.</div>
-        </div>
-      </div>
-
-      <p class="help-text">Un requisito importante: solo funcionan si tienes la app <b>instalada en la pantalla de inicio</b> del móvil (no abierta desde Safari), con iOS 16.4 o superior. Si no cumples estos requisitos, la tarjeta te lo indicará en lugar del botón de activar.</p>
+      <p class="help-text">Un requisito importante: solo funcionan si tienes la app <b>instalada en la pantalla de inicio</b> del móvil (no abierta desde Safari), con iOS 16.4 o superior. Si no cumples estos requisitos, la tarjeta te lo indicará en lugar de los horarios.</p>
     </div>
   `;
 }
