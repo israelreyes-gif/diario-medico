@@ -20,6 +20,7 @@ import {
   handleGetVitalsMes,
 } from "./vitals.js";
 import { handleGetPushPublicKey, handleSuscribirPush, handleDesuscribirPush } from "./push.js";
+import { handleGetNotifConfig, handlePostNotifConfig } from "./notif-config.js";
 import { handleScheduled } from "./scheduled.js";
 import { handleGenerarInformePdf } from "./report.js";
 
@@ -139,6 +140,14 @@ export default {
 
       if (url.pathname === "/push-desuscribir" && request.method === "POST") {
         return await handleDesuscribirPush(request, env, usuarioId);
+      }
+
+      if (url.pathname === "/notif-config" && request.method === "GET") {
+        return await handleGetNotifConfig(env, usuarioId);
+      }
+
+      if (url.pathname === "/notif-config" && request.method === "POST") {
+        return await handlePostNotifConfig(request, env, usuarioId);
       }
 
       if (url.pathname === "/informe-pdf" && request.method === "POST") {
