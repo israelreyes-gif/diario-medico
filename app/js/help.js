@@ -281,15 +281,15 @@ function renderHelpEmergencia() {
       </div>
 
       <div class="help-subtitle">Contactos personales y médicos</div>
-      <p class="help-text">Añade tantos contactos como necesites en cada grupo. Cada contacto médico incluye además su especialidad:</p>
+      <p class="help-text">Añade tantos contactos como necesites en cada grupo. Cada contacto médico incluye además su especialidad. (Los nombres y teléfonos de este ejemplo son inventados, solo para mostrar el diseño):</p>
 
       <div class="help-mock">
         <div class="help-mock-contact">
-          <span>Sara Cote — 677 679 754</span>
+          <span>María Ejemplo — 600 000 000</span>
           <span class="help-num">1</span>
         </div>
         <div class="help-mock-contact">
-          <span>Ana Marín (Psicóloga)</span>
+          <span>Dr. Pérez (Cardiólogo)</span>
           <span class="help-num">2</span>
         </div>
         <div class="help-legend">
