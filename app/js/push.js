@@ -1,6 +1,7 @@
-// Notificaciones push: la suscripción del dispositivo se resuelve una sola vez (al detectar
-// que aún no existe) y queda activa siempre. A partir de ahí, el usuario solo activa/desactiva
-// franjas horarias (mañana/tarde/noche) con un interruptor — eso nunca toca la suscripción.
+// Notificaciones push: la suscripción del dispositivo se resuelve una sola vez, mediante
+// un botón "Activar notificaciones" que solo aparece mientras no exista suscripción.
+// Una vez creada, ese botón desaparece para siempre y la tarjeta pasa a mostrar los
+// interruptores de franja (mañana/tarde/noche), que nunca vuelven a tocar la suscripción.
 
 const FRANJAS_NOTIF = [
   { id: 'manana', label: 'Mañana' },
@@ -30,20 +31,24 @@ async function getPushSubscriptionActual() {
   return registro.pushManager.getSubscription();
 }
 
-// Se llama una sola vez, al cargar la tarjeta. Si ya hay suscripción y permiso, no hace nada.
-// Si no la hay, la crea en silencio (pidiendo permiso si hace falta) — de aquí en adelante,
-// los interruptores de franja nunca vuelven a tocar esto.
-async function asegurarSuscripcionPushSilenciosa() {
+async function haySuscripcionValida() {
+  const suscripcion = await getPushSubscriptionActual();
+  return !!suscripcion && Notification.permission === 'granted';
+}
+
+// Se llama únicamente al pulsar el botón "Activar notificaciones". Pide el permiso,
+// crea la suscripción y la guarda en el servidor. Devuelve true/false según el resultado.
+async function activarSuscripcionPush() {
+  const permiso = await Notification.requestPermission();
+  if (permiso !== 'granted') {
+    alert('No se han concedido permisos. Puedes activarlos más tarde desde los ajustes del sistema.');
+    return false;
+  }
+
   try {
-    const suscripcionExistente = await getPushSubscriptionActual();
-    if (suscripcionExistente && Notification.permission === 'granted') return true;
-
-    const permiso = await Notification.requestPermission();
-    if (permiso !== 'granted') return false;
-
     const keyRes = await fetch(`${API_URL}/push-public-key`);
     const keyData = await keyRes.json();
-    if (!keyRes.ok) return false;
+    if (!keyRes.ok) throw new Error(keyData.error || 'No se pudo obtener la clave de notificaciones.');
 
     const registro = await navigator.serviceWorker.ready;
     let suscripcion = await registro.pushManager.getSubscription();
@@ -61,23 +66,40 @@ async function asegurarSuscripcionPushSilenciosa() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ endpoint: suscripcionJson.endpoint, keys: suscripcionJson.keys }),
     });
-    return res.ok;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'No se pudo guardar la suscripción.');
+
+    return true;
   } catch (err) {
+    alert('No se pudieron activar las notificaciones: ' + err.message);
     return false;
+  }
+}
+
+async function onActivarNotifClick() {
+  const btn = document.getElementById('notifActivateBtn');
+  btn.disabled = true;
+  btn.textContent = 'Activando...';
+
+  const ok = await activarSuscripcionPush();
+
+  if (ok) {
+    await updateHomePushTask();
+  } else {
+    btn.disabled = false;
+    btn.textContent = 'Activar notificaciones';
   }
 }
 
 function toggleNotifFranja(franjaId) {
   notifConfigActual[franjaId].activo = !notifConfigActual[franjaId].activo;
-  renderHomeNotifCard();
+  renderHomeNotifCard(true);
 }
 
 function cambiarNotifHora(franjaId, hora) {
   notifConfigActual[franjaId].hora = parseInt(hora, 10);
 }
 
-// Guardar horarios NUNCA toca la suscripción push — solo actualiza qué franjas están
-// activas y a qué hora, sobre una suscripción que ya se resolvió antes en segundo plano.
 async function guardarNotifConfig() {
   const btn = document.getElementById('notifSaveBtn');
   btn.disabled = true;
@@ -99,7 +121,7 @@ async function guardarNotifConfig() {
   } finally {
     btn.disabled = false;
     btn.textContent = 'Guardar horarios';
-    renderHomeNotifCard();
+    renderHomeNotifCard(true);
   }
 }
 
@@ -136,9 +158,28 @@ async function updateHomePushTask() {
     return;
   }
 
-  // Resuelve la suscripción en segundo plano, sin bloquear el renderizado ni depender
-  // de ningún interruptor. Solo pasa una vez de verdad (cuando aún no existía).
-  asegurarSuscripcionPushSilenciosa();
+  const tieneSuscripcion = await haySuscripcionValida();
+
+  if (!tieneSuscripcion) {
+    contenedor.innerHTML = `
+      <div class="home-task-title">Notificaciones</div>
+      <div class="home-task-card">
+        <div class="home-task-head">
+          <div class="home-task-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </div>
+          <div class="home-task-text">
+            <h4>Activar notificaciones</h4>
+            <p>Actívalas para poder configurar recordatorios de tu ánimo</p>
+          </div>
+        </div>
+        <button class="notif-save-btn" id="notifActivateBtn" onclick="onActivarNotifClick()">Activar notificaciones</button>
+      </div>
+    `;
+    return;
+  }
 
   try {
     const res = await apiFetch('/notif-config');
@@ -148,10 +189,10 @@ async function updateHomePushTask() {
     // si falla la carga, se queda con los valores por defecto en memoria
   }
 
-  renderHomeNotifCard();
+  renderHomeNotifCard(false);
 }
 
-function renderHomeNotifCard() {
+function renderHomeNotifCard(soloRepintarFranjas) {
   const contenedor = document.getElementById('homeTaskArea');
   if (!contenedor) return;
 
