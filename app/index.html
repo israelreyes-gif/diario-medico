@@ -288,8 +288,12 @@
       <div class="intensity-label">Secciones a incluir</div>
 
       <div class="report-check-row">
-        <input type="checkbox" id="reportSecMedicacion">
+        <input type="checkbox" id="reportSecMedicacion" onchange="updateReportHistoricoAvailability()">
         <label for="reportSecMedicacion">Medicación actual</label>
+      </div>
+      <div class="report-check-row-sub">
+        <input type="checkbox" id="reportIncluirHistorico">
+        <label for="reportIncluirHistorico">Incluir histórico de cambios</label>
       </div>
       <div class="report-check-row">
         <input type="checkbox" id="reportSecEmergencia">
