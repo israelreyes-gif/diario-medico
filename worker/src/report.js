@@ -18,7 +18,7 @@ function formatearRangoLabel(inicio, fin) {
 
 export async function handleGenerarInformePdf(request, env, usuarioId) {
   const body = await request.json();
-  const { secciones, inicio, fin } = body;
+  const { secciones, inicio, fin, incluirHistoricoMedicacion } = body;
 
   if (!Array.isArray(secciones) || secciones.length === 0) {
     return json({ error: "Elige al menos una sección para el informe." }, 400);
@@ -28,7 +28,6 @@ export async function handleGenerarInformePdf(request, env, usuarioId) {
     return json({ error: "Ninguna de las secciones indicadas es válida." }, 400);
   }
 
-  // medicación y emergencia son "estado actual", no necesitan rango — pero animo/constantes sí
   const necesitaRango = seccionesValidas.includes("animo") || seccionesValidas.includes("constantes");
   let inicioFinal = inicio;
   let finFinal = fin;
@@ -41,12 +40,13 @@ export async function handleGenerarInformePdf(request, env, usuarioId) {
       return json({ error: "La fecha de inicio debe ser anterior a la de fin." }, 400);
     }
   } else {
-    // por si acaso, para que recopilarDatosInforme tenga siempre valores válidos aunque no se usen
     inicioFinal = fechaHoyISO();
     finFinal = fechaHoyISO();
   }
 
-  const datos = await recopilarDatosInforme(env, usuarioId, seccionesValidas, inicioFinal, finFinal);
+  const incluirHistorico = seccionesValidas.includes("medicacion") && incluirHistoricoMedicacion === true;
+
+  const datos = await recopilarDatosInforme(env, usuarioId, seccionesValidas, inicioFinal, finFinal, incluirHistorico);
 
   const meta = {
     fechaGeneracion: new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" }),
