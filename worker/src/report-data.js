@@ -64,4 +64,32 @@ export async function recopilarDatosInforme(env, usuarioId, secciones, inicio, f
 
     const porDia = {};
     registros.forEach((r) => {
-      if (!porDia[r.fecha]) porDia[r.fecha] = { fecha: r.fecha, registros: [], comentario: comentario
+      if (!porDia[r.fecha]) porDia[r.fecha] = { fecha: r.fecha, registros: [], comentario: comentarioPorFecha[r.fecha] || null };
+      porDia[r.fecha].registros.push({ hora: r.hora, emocion: r.emocion, intensidad: r.intensidad });
+    });
+
+    comentarios.forEach((c) => {
+      if (!porDia[c.fecha]) porDia[c.fecha] = { fecha: c.fecha, registros: [], comentario: c.comentario };
+    });
+
+    datos.animo = Object.values(porDia).sort((a, b) => a.fecha.localeCompare(b.fecha));
+  }
+
+  if (secciones.includes("constantes")) {
+    const { results } = await env.DB.prepare(
+      "SELECT fecha, hora, tipo, valor FROM constantes_vitales WHERE usuario_id = ? AND fecha BETWEEN ? AND ? ORDER BY tipo ASC, fecha ASC, hora ASC"
+    )
+      .bind(usuarioId, inicio, fin)
+      .all();
+
+    const porTipo = {};
+    results.forEach((r) => {
+      if (!porTipo[r.tipo]) porTipo[r.tipo] = [];
+      porTipo[r.tipo].push({ fecha: r.fecha, hora: r.hora, valor: JSON.parse(r.valor) });
+    });
+
+    datos.constantes = porTipo;
+  }
+
+  return datos;
+}
