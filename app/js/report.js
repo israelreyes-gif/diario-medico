@@ -8,12 +8,14 @@ function fechaHaceUnMesISO() {
 
 function openReportForm() {
   document.getElementById('reportSecMedicacion').checked = true;
+  document.getElementById('reportIncluirHistorico').checked = false;
   document.getElementById('reportSecEmergencia').checked = true;
   document.getElementById('reportSecAnimo').checked = true;
   document.getElementById('reportSecConstantes').checked = true;
   document.getElementById('reportInicio').value = fechaHaceUnMesISO();
   document.getElementById('reportFin').value = fechaHoyISO();
   updateReportRangeVisibility();
+  updateReportHistoricoAvailability();
   document.getElementById('reportFormOverlay').classList.add('show');
 }
 
@@ -21,12 +23,19 @@ function closeReportForm() {
   document.getElementById('reportFormOverlay').classList.remove('show');
 }
 
-// El rango de fechas solo hace falta si se ha marcado Ánimo o Constantes
 function updateReportRangeVisibility() {
   const animo = document.getElementById('reportSecAnimo').checked;
   const constantes = document.getElementById('reportSecConstantes').checked;
   const rangeBlock = document.getElementById('reportRangeBlock');
   rangeBlock.style.display = (animo || constantes) ? 'block' : 'none';
+}
+
+// La subopción de histórico solo tiene sentido si "Medicación actual" está marcada
+function updateReportHistoricoAvailability() {
+  const medicacion = document.getElementById('reportSecMedicacion').checked;
+  const checkboxHistorico = document.getElementById('reportIncluirHistorico');
+  checkboxHistorico.disabled = !medicacion;
+  if (!medicacion) checkboxHistorico.checked = false;
 }
 
 async function generarInformePdf() {
@@ -41,6 +50,7 @@ async function generarInformePdf() {
     return;
   }
 
+  const incluirHistoricoMedicacion = document.getElementById('reportIncluirHistorico').checked;
   const inicio = document.getElementById('reportInicio').value;
   const fin = document.getElementById('reportFin').value;
 
@@ -57,7 +67,7 @@ async function generarInformePdf() {
     const res = await apiFetch('/informe-pdf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ secciones, inicio, fin }),
+      body: JSON.stringify({ secciones, inicio, fin, incluirHistoricoMedicacion }),
     });
 
     if (!res.ok) {
