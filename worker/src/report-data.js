@@ -1,7 +1,4 @@
-// Recopila de D1 los datos necesarios para el informe PDF, según las secciones
-// que el usuario haya marcado y el rango de fechas elegido.
-
-export async function recopilarDatosInforme(env, usuarioId, secciones, inicio, fin) {
+export async function recopilarDatosInforme(env, usuarioId, secciones, inicio, fin, incluirHistoricoMedicacion) {
   const datos = {};
 
   if (secciones.includes("medicacion")) {
@@ -11,6 +8,25 @@ export async function recopilarDatosInforme(env, usuarioId, secciones, inicio, f
       .bind(usuarioId)
       .all();
     datos.medicacion = results;
+
+    if (incluirHistoricoMedicacion) {
+      const { results: snapshots } = await env.DB.prepare(
+        "SELECT id, creado_en FROM snapshots WHERE usuario_id = ? ORDER BY creado_en ASC"
+      )
+        .bind(usuarioId)
+        .all();
+
+      const historico = [];
+      for (const snap of snapshots) {
+        const { results: meds } = await env.DB.prepare(
+          "SELECT nombre, desayuno, comida, cena, nota FROM snapshot_medicamentos WHERE snapshot_id = ? ORDER BY nombre ASC"
+        )
+          .bind(snap.id)
+          .all();
+        historico.push({ fecha: snap.creado_en, medicamentos: meds });
+      }
+      datos.medicacionHistorico = historico;
+    }
   }
 
   if (secciones.includes("emergencia")) {
@@ -48,33 +64,4 @@ export async function recopilarDatosInforme(env, usuarioId, secciones, inicio, f
 
     const porDia = {};
     registros.forEach((r) => {
-      if (!porDia[r.fecha]) porDia[r.fecha] = { fecha: r.fecha, registros: [], comentario: comentarioPorFecha[r.fecha] || null };
-      porDia[r.fecha].registros.push({ hora: r.hora, emocion: r.emocion, intensidad: r.intensidad });
-    });
-
-    // Días que solo tienen comentario, sin ningún registro de ánimo, también se incluyen
-    comentarios.forEach((c) => {
-      if (!porDia[c.fecha]) porDia[c.fecha] = { fecha: c.fecha, registros: [], comentario: c.comentario };
-    });
-
-    datos.animo = Object.values(porDia).sort((a, b) => a.fecha.localeCompare(b.fecha));
-  }
-
-  if (secciones.includes("constantes")) {
-    const { results } = await env.DB.prepare(
-      "SELECT fecha, hora, tipo, valor FROM constantes_vitales WHERE usuario_id = ? AND fecha BETWEEN ? AND ? ORDER BY tipo ASC, fecha ASC, hora ASC"
-    )
-      .bind(usuarioId, inicio, fin)
-      .all();
-
-    const porTipo = {};
-    results.forEach((r) => {
-      if (!porTipo[r.tipo]) porTipo[r.tipo] = [];
-      porTipo[r.tipo].push({ fecha: r.fecha, hora: r.hora, valor: JSON.parse(r.valor) });
-    });
-
-    datos.constantes = porTipo;
-  }
-
-  return datos;
-}
+      if (!porDia[r.fecha]) porDia[r.fecha] = { fecha: r.fecha, registros: [], comentario: comentario
