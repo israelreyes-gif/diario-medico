@@ -19,6 +19,16 @@ function formatVitalValor(tipo, valor) {
   return `${valor.valor} ${TIPOS_VITAL_UNIDAD[tipo]}`;
 }
 
+function formatFechaHistorico(fechaISO) {
+  try {
+    return new Date(fechaISO).toLocaleString("es-ES", {
+      day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+    });
+  } catch (err) {
+    return fechaISO;
+  }
+}
+
 export async function generarInformePdf(datos, meta) {
   const pdf = await PDFDocument.create();
   const fontRegular = await pdf.embedFont(StandardFonts.Helvetica);
@@ -59,15 +69,11 @@ export async function generarInformePdf(datos, meta) {
     if (avanzarY) y -= tamano + 6;
   }
 
-  // Calcula cuánto ocupará un bloque de líneas (para reservar el hueco entero antes de dibujar,
-  // y así nunca partir ni solapar un bloque entre dos páginas o entre dos escrituras).
   function alturaBloque(numLineas, tamano = 10) {
     return numLineas * (tamano + 6);
   }
 
   function tarjeta(alturaContenido, colorBarra) {
-    // Dibuja el fondo y la barra de color de una tarjeta; devuelve la Y donde empieza el
-    // contenido interior, ya con el margen aplicado.
     const alturaTotal = alturaContenido + 16;
     nuevaPaginaSiHaceFalta(alturaTotal + 10);
     const yTop = y;
@@ -80,7 +86,7 @@ export async function generarInformePdf(datos, meta) {
       color: colorBarra,
     });
     y = yTop - 10;
-    return yTop - alturaTotal - 10; // límite inferior de la tarjeta, para dejar margen después
+    return yTop - alturaTotal - 10;
   }
 
   function cerrarTarjeta(limiteInferior) {
@@ -93,6 +99,14 @@ export async function generarInformePdf(datos, meta) {
     pagina.drawRectangle({ x: MARGEN, y: y - 6, width: 26, height: 16, color: colorBanda });
     escribir(texto, { tamano: 15, negrita: true, color: COLOR_TEAL_DEEP, x: MARGEN + 34, avanzarY: false });
     y -= 26;
+  }
+
+  function subtituloSeccion(texto, colorBanda) {
+    nuevaPaginaSiHaceFalta(28);
+    y -= 6;
+    pagina.drawRectangle({ x: MARGEN, y: y - 4, width: 18, height: 12, color: colorBanda });
+    escribir(texto, { tamano: 12.5, negrita: true, color: COLOR_TEAL_DEEP, x: MARGEN + 26, avanzarY: false });
+    y -= 20;
   }
 
   // --- Cabecera de portada ---
@@ -128,6 +142,34 @@ export async function generarInformePdf(datos, meta) {
       });
     }
     y -= 6;
+
+    // --- Histórico de cambios de medicación (subsección opcional) ---
+    if (datos.medicacionHistorico) {
+      subtituloSeccion("Histórico de cambios", COLOR_MEDS);
+      if (datos.medicacionHistorico.length === 0) {
+        escribir("Sin cambios registrados en el histórico.", { tamano: 10, color: COLOR_SUAVE });
+      } else {
+        datos.medicacionHistorico.forEach((snap) => {
+          const lineas = 1 + Math.max(snap.medicamentos.length, 1);
+          const limite = tarjeta(alturaBloque(lineas), COLOR_MEDS);
+
+          escribir(formatFechaHistorico(snap.fecha), { tamano: 10.5, negrita: true, color: COLOR_TEAL_DEEP, x: MARGEN + 14 });
+          if (snap.medicamentos.length === 0) {
+            escribir("Sin medicación en este momento.", { tamano: 9.5, color: COLOR_SUAVE, x: MARGEN + 24 });
+          } else {
+            snap.medicamentos.forEach((m) => {
+              const dosis = [];
+              if (m.desayuno) dosis.push(`D:${m.desayuno}`);
+              if (m.comida) dosis.push(`C:${m.comida}`);
+              if (m.cena) dosis.push(`N:${m.cena}`);
+              escribir(`${m.nombre}${dosis.length ? '  (' + dosis.join(' · ') + ')' : ''}`, { tamano: 9.5, x: MARGEN + 24 });
+            });
+          }
+          cerrarTarjeta(limite);
+        });
+      }
+      y -= 6;
+    }
   }
 
   // --- Ficha de emergencia ---
@@ -203,7 +245,7 @@ export async function generarInformePdf(datos, meta) {
 
         escribir(TIPOS_VITAL_LABEL[tipo] || tipo, { tamano: 11.5, negrita: true, color: COLOR_TEAL_DEEP, x: MARGEN + 14 });
         registros.forEach((r) => {
-          escribir(`${r.fecha}  ${r.hora}  ·  ${formatVitalValor(tipo, r.valor)}`, { tamano: 10, x: MARGEN + 24 });
+          escribir(`${r.fecha}  ${r.hora}  ·  ${formatVitalValor(tipo, r.valor)}`, { tamano: 10, x: MARGEN + 14 });
         });
         cerrarTarjeta(limite);
       });
